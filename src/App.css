@@ -1,0 +1,54 @@
+#root {
+  margin: 0 auto;
+  text-align: center;
+  background-color: black;
+}
+
+@font-face {
+  font-family: 'one';
+  src: url('./assets/fonts/icam.6b63bf7.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'two';
+  src: url('./assets/fonts/fontone.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'three';
+  src: url('./assets/fonts/fonttwo.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/fontthree.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.font-one {
+  font-family: 'one', sans-serif;
+}
+
+.font-two {
+  font-family: 'two', sans-serif;
+}
+
+.font-three {
+  font-family: 'three', sans-serif;
+}
+
+.font-four {
+  font-family: 'four', sans-serif;
+}
+
+
+
+
+
