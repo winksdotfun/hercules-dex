@@ -13,25 +13,79 @@
 
 @font-face {
   font-family: 'two';
-  src: url('./assets/fonts/fontone.woff2') format('woff2');
+  src: url('./assets/fonts/font-one.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'three';
-  src: url('./assets/fonts/fonttwo.woff2') format('woff2');
+  src: url('./assets/fonts/font-two.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'four';
-  src: url('./assets/fonts/fontthree.woff2') format('woff2');
+  src: url('./assets/fonts/font-three.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-four.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-five.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-six.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-seven.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-eight.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-nine.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-ten.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-el.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'four';
+  src: url('./assets/fonts/font-twel.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
 .font-one {
   font-family: 'one', sans-serif;
 }
@@ -48,6 +102,41 @@
   font-family: 'four', sans-serif;
 }
 
+.font-five {
+  font-family: 'four', sans-serif;
+}
+
+.font-six {
+  font-family: 'four', sans-serif;
+}
+
+.font-seven {
+  font-family: 'four', sans-serif;
+}
+
+.font-eight {
+  font-family: 'four', sans-serif;
+}
+
+.font-nine {
+  font-family: 'four', sans-serif;
+}
+
+.font-ten {
+  font-family: 'four', sans-serif;
+}
+
+.font-eleven {
+  font-family: 'four', sans-serif;
+}
+
+.font-twelve {
+  font-family: 'four', sans-serif;
+}
+
+.font-wider {
+  font-stretch:ultra-expanded
+}
 
 
 
