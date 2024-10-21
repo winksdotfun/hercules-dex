@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { IoIosClose } from "react-icons/io";
 import { Options, Commonbases } from "../constant/index";
 
-const Token = () => {
+const Token = ({ closeDropdown, onSelectToken }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filter tokens based on the search term
@@ -11,7 +11,7 @@ const Token = () => {
   );
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 py-2 font-custom">
+    <div className="fixed inset-0 flex items-center justify-center bg-black py-2 font-custom">
       <div className="bg-primaryBg rounded-3xl relative border border-[#222] w-full m-2 sm:w-[400px] h-fit">
         {/* Header and Input - Fixed Top */}
         <div className="sticky top-0 bg-primaryBg z-10 px-[1.5rem] pt-[1rem] pb-[.5rem] rounded-3xl">
@@ -22,6 +22,7 @@ const Token = () => {
             <IoIosClose
               size={28}
               className="hover:text-white text-notConnectedText mt-1 items-center cursor-pointer"
+              onClick={closeDropdown}
             />
           </div>
           <input
@@ -45,7 +46,8 @@ const Token = () => {
               {Commonbases.map((token) => (
                 <div
                   key={token.id}
-                  className="flex items-center gap-2 hover:bg-inputBg rounded-full p-1 my-1"
+                  className="flex items-center gap-2 hover:bg-inputBg rounded-full p-1 my-1 cursor-pointer"
+                  onClick={() => onSelectToken(token.head)}
                 >
                   <img src={token.image} alt="" className="h-[24px] w-[24px]" />
                   <h6 className="text-white text-left font-semibold font-one text-xs">
@@ -66,7 +68,8 @@ const Token = () => {
               filteredOptions.map((option) => (
                 <div
                   key={option.id}
-                  className="flex items-center justify-between hover:bg-inputBg rounded-2xl p-1 py-3 my-1"
+                  className="flex items-center justify-between hover:bg-inputBg rounded-2xl p-1 py-3 my-1 cursor-pointer"
+                  onClick={() => onSelectToken(option.head)}
                 >
                   <div className="flex gap-2">
                     <img
@@ -99,7 +102,10 @@ const Token = () => {
 
         {/* Cancel Button - Fixed Bottom */}
         <div className="sticky bottom-0 rounded-3xl bg-primaryBg z-10 px-[1.5rem] py-[1rem]">
-          <button className="w-full bg-[#222222ad] hover:bg-inputBg text-white py-2 font-one font-medium rounded-full">
+          <button
+            className="w-full bg-[#222222ad] hover:bg-inputBg text-white py-2 font-one font-medium rounded-full"
+            onClick={closeDropdown}
+          >
             Close
           </button>
         </div>
