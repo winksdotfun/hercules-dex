@@ -15,6 +15,14 @@ const TranscationCompleted = ({
   inputVal,
   outputVal,
 }) => {
+
+  const formatBalance = (balance) => {
+    const numBalance = parseFloat(balance);
+    if (numBalance < 0.00000001 && numBalance > 0) {
+      return "<0.00000001";
+    }
+    return numBalance.toFixed(5);
+  };
   return (
     <div>
       <div className="fixed inset-0 flex items-center justify-center bg-black py-2">
@@ -61,7 +69,7 @@ const TranscationCompleted = ({
                 {fromToken.name}
               </p>
               <p className="sm:text-[16px] text-[11px] font-normal text-two  text-start text-white">
-               {inputVal}
+               {formatBalance(inputVal)}
               </p>
             </div>
             <Arrow />
@@ -73,7 +81,7 @@ const TranscationCompleted = ({
                 {toToken.name}
               </p>
               <p className="sm:text-[16px] text-[11px] font-normal text-two  text-start text-white">
-                {outputVal}
+                {formatBalance(outputVal)}
               </p>
             </div>
           </div>

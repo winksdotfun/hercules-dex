@@ -32,6 +32,13 @@ const Token = ({ closeDropdown, onSelectToken }) => {
       return "0";
     }
   };
+  const formatBalance = (balance) => {
+    const numBalance = parseFloat(balance);
+    if (numBalance < 0.00001 && numBalance > 0) {
+      return "<0.00001";
+    }
+    return numBalance.toFixed(5);
+  };
 
   // Fetch balances for all tokens when component mounts or search changes
   useEffect(() => {
@@ -143,7 +150,7 @@ const Token = ({ closeDropdown, onSelectToken }) => {
                     <h1 className="font-semibold text-sm text-balanceText">
                       {parseFloat(balances[option.id]) === 0
                         ? "0"
-                        : balances[option.id] || "0"}
+                        : isConnected && (formatBalance(balances[option.id])) || "0" }
                     </h1>
                   </div>
                 ))

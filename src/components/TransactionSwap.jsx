@@ -14,6 +14,14 @@ const TransactionSwap = ({
   inputVal, 
   outputVal
 }) => {
+
+  const formatBalance = (balance) => {
+    const numBalance = parseFloat(balance);
+    if (numBalance < 0.00001 && numBalance > 0) {
+      return "<0.00001";
+    }
+    return numBalance.toFixed(5);
+  };
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black py-2">
       <div className="p-3 sm:p-6 rounded-3xl border-[#6c757d33] border-[.5px] shadow-md w-fit sm:w-[490px] md:w-[500px] bg-primaryBg">
@@ -80,7 +88,8 @@ const TransactionSwap = ({
               Minimum received
             </p>
             <p className="sm:text-[16px] text-[11px] font-normal text-two text-right items-center">
-              {outputVal} {toToken.name} {/* Replace with actual value */}
+              {formatBalance(outputVal)} {toToken.name}{" "}
+              {/* Replace with actual value */}
             </p>
           </div>
           <div className="flex justify-between">

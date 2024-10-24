@@ -28,7 +28,7 @@ const Swap = () => {
    address: "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
  });
  const [inputValue, setInputValue] = useState("");
- const [ouputvalue, setOutputValue] = useState("0.0")
+ const [ouputvalue, setOutputValue] = useState("0.00000000000001")
  const [fromTokenBalance, setFromTokenBalance] = useState("0.00");
  const [toTokenBalance, setToTokenBalance] = useState("0.00");
  const { address: walletAddress, isConnected } = useAccount();
@@ -339,7 +339,7 @@ const getBalances = async () => {
           </div>
         </div>
 
-        {isInsufficientBalance && (
+        {isInsufficientBalance && isConnected &&(
           <div
             role="alert"
             aria-live="polite"
