@@ -65,14 +65,14 @@ const TransactionSwap = ({
             </div>
           </div>
         </div>
-        <div
+        {/* <div
           role="alert"
           aria-live="polite"
           aria-atomic="true"
           className="alert mt-3 mb-0 bg-[#ff353519] bg-opacity-50 text-[#ff3535] border-none font-normal px-6 text-[13px] text-left p-2 rounded-full"
         >
           Error: You cancelled the swap
-        </div>
+        </div> */}
 
         <div className="text-white my-6 flex flex-col gap-1">
           <div className="flex justify-between">
