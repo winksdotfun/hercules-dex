@@ -9,7 +9,6 @@ import { Options } from "../constant/index"; // Ensure Options contains token da
 import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
-import { GetApproval } from "../integration";
 
 
 const Swap = () => {
@@ -17,8 +16,8 @@ const Swap = () => {
  const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
  const [isMaxHovered, setIsMaxHovered] = useState(false);
  const [showTransactionSwap, setShowTransactionSwap] = useState(false); // State for TransactionSwap visibility
-const [METIS, setMETIS] = useState(false);
-const [needApproval, setneedApproval] = useState(false)
+ const [inputBal, setInputBal] = useState(0.0)
+ const [needApproval, setneedApproval] = useState(false)
  const [selectedOptionFrom, setSelectedOptionFrom] = useState({
    name: "m.USDC",
    image: musdc,
@@ -71,7 +70,7 @@ const getBalances = async () => {
 
   const fromBalance = await fetchTokenBalance(selectedOptionFrom.address);
   const toBalance = await fetchTokenBalance(selectedOptionTo.address);
-
+  setInputBal(fromBalance)
   setFromTokenBalance(formatBalance(fromBalance));
   setToTokenBalance(formatBalance(toBalance));
 };
@@ -151,37 +150,13 @@ const getBalances = async () => {
    setIsDropdownOpenTo(false);
  };
 
-
- const handleApproval = async() => {
-  try {
-    const res = await GetApproval(walletAddress, selectedOptionFrom.address, metis)
-
-    console.log("res",res);
-    if(res === "0"){
-      setneedApproval(true)
-    }
-    
-  } catch (error) {
-    console.log("eerror in alloaef",error);
-    
-  }
- }
-
  const handleInputChange = (e) => {
-  if(selectedOptionFrom === "METIS"){
-setMETIS(true);
-  }
    const value = e.target.value;
    const validValue = value.replace(/[^0-9.]/g, "");
    if (validValue.split(".").length > 2) return;
 
    setInputValue(validValue);
-
-   handleApproval()
-
-   
  };
-
 
  const handleKeyPress = (e) => {
    if (e.key === "-") {
@@ -196,7 +171,7 @@ setMETIS(true);
  };
 
  const handleMaxClick = () => {
-   setInputValue( fromTokenBalance);
+   setInputValue( inputBal);
  };
 
  // Handle showing the TransactionSwap component
@@ -208,7 +183,7 @@ setMETIS(true);
  const handleCloseTransactionSwap = () => {
    setShowTransactionSwap(false);
  };
- const isInsufficientBalance = parseFloat(inputValue) > parseFloat(fromTokenBalance);
+ const isInsufficientBalance = parseFloat(inputValue) > parseFloat(inputBal);
  
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-black relative">
@@ -270,7 +245,7 @@ setMETIS(true);
                 onKeyPress={handleKeyPress}
               />
               <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
-                Balance:{isConnected ? fromTokenBalance: "0.0"}
+                Balance:{isConnected ? fromTokenBalance : "0.0"}
               </div>
             </div>
 
@@ -359,13 +334,13 @@ setMETIS(true);
                 disabled
               />
               <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
-                Balance: {isConnected? toTokenBalance : "0.0"}
+                Balance: {isConnected ? toTokenBalance : "0.0"}
               </div>
             </div>
           </div>
         </div>
 
-        {isInsufficientBalance && isConnected &&(
+        {isInsufficientBalance && isConnected && (
           <div
             role="alert"
             aria-live="polite"
@@ -382,19 +357,37 @@ setMETIS(true);
               Not Connected
             </button>
           )}
-            {isConnected && ( !isInsufficientBalance && inputValue > 0 ? (
-            <button
-              className="text-black bg-custom-gradient font-two cursor-pointer bg-notConnectedBg rounded-full p-2 text-lg font-semibold text-center items-center"
-              onClick={() => setShowTransactionSwap(true)}
-            >
-              Swap
-            </button>
-          ) : (
-            <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-3 rounded-xl font-semibold text-lg mt-1">
-              Swap
-            </button>
-          ))}
-        
+          {isConnected &&
+            (!isInsufficientBalance && inputValue > 0 ? (
+              needApproval ? (
+                <button
+                  onMouseDown={() => setIsMaxHovered(true)}
+                  onMouseUp={() => setIsMaxHovered(false)}
+                  onMouseLeave={() => setIsMaxHovered(false)}
+                  className={`text-black bg-custom-gradient ${
+                    isMaxHovered ? "text-white" : "text-black"
+                  } font-two cursor-pointer bg-notConnectedBg rounded-full p-2 text-lg font-semibold text-center items-center`}
+                >
+                  Approval Required
+                </button>
+              ) : (
+                <button
+                  onMouseDown={() => setIsMaxHovered(true)}
+                  onMouseUp={() => setIsMaxHovered(false)}
+                  onMouseLeave={() => setIsMaxHovered(false)}
+                  className={`text-black bg-custom-gradient ${
+                    isMaxHovered ? "text-white" : "text-black"
+                  } font-two cursor-pointer bg-notConnectedBg rounded-full p-2 text-lg font-semibold text-center items-center`}
+                  onClick={() => setShowTransactionSwap(true)}
+                >
+                  Swap
+                </button>
+              )
+            ) : (
+              <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-3 rounded-xl font-semibold text-lg mt-1">
+                Swap
+              </button>
+            ))}
         </div>
       </div>
 
@@ -404,7 +397,7 @@ setMETIS(true);
           initialToToken={selectedOptionTo}
           onClose={handleCloseTransactionSwap} // Pass close function
           inpVal={inputValue}
-          outVal = {ouputvalue}
+          outVal={ouputvalue}
         />
       )}
     </div>
