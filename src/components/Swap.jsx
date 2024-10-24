@@ -9,6 +9,7 @@ import { Options } from "../constant/index"; // Ensure Options contains token da
 import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
+import { GetApproval } from "../integration";
 
 
 const Swap = () => {
@@ -16,7 +17,8 @@ const Swap = () => {
  const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
  const [isMaxHovered, setIsMaxHovered] = useState(false);
  const [showTransactionSwap, setShowTransactionSwap] = useState(false); // State for TransactionSwap visibility
-
+const [METIS, setMETIS] = useState(false);
+const [needApproval, setneedApproval] = useState(false)
  const [selectedOptionFrom, setSelectedOptionFrom] = useState({
    name: "m.USDC",
    image: musdc,
@@ -149,13 +151,37 @@ const getBalances = async () => {
    setIsDropdownOpenTo(false);
  };
 
+
+ const handleApproval = async() => {
+  try {
+    const res = await GetApproval(walletAddress, selectedOptionFrom.address, metis)
+
+    console.log("res",res);
+    if(res === "0"){
+      setneedApproval(true)
+    }
+    
+  } catch (error) {
+    console.log("eerror in alloaef",error);
+    
+  }
+ }
+
  const handleInputChange = (e) => {
+  if(selectedOptionFrom === "METIS"){
+setMETIS(true);
+  }
    const value = e.target.value;
    const validValue = value.replace(/[^0-9.]/g, "");
    if (validValue.split(".").length > 2) return;
 
    setInputValue(validValue);
+
+   handleApproval()
+
+   
  };
+
 
  const handleKeyPress = (e) => {
    if (e.key === "-") {
