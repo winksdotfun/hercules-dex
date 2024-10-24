@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import TransactionSwap from "./TransactionSwap";
 import TranscationCompleted from "./TranscationCompleted";
 
-const SwapContainer = ({ initialFromToken, initialToToken, onClose }) => {
+const SwapContainer = ({ initialFromToken, initialToToken, onClose, inpVal, outVal }) => {
     const [showSwapModal, setShowSwapModal] = useState(true); // Track whether to show the modal
     const [fromToken, setFromToken] = useState(initialFromToken);
     const [toToken, setToToken] = useState(initialToToken);
+    const [inputVal, setInputValue] = useState(inpVal);
+    const [outputVal, setOutputValue] = useState(outVal);
+
 
     const handleSwapClick = () => {
       setShowSwapModal(false); // Switch to TransactionCompleted
@@ -29,6 +32,8 @@ const SwapContainer = ({ initialFromToken, initialToToken, onClose }) => {
             onSwapClick={handleSwapClick}
             onClose={onClose}
             onCancel={handleCancel} // Pass down handleCancel
+            inputVal={inputVal}
+            outputVal={outputVal}
           />
         ) : (
           <TranscationCompleted
@@ -36,6 +41,8 @@ const SwapContainer = ({ initialFromToken, initialToToken, onClose }) => {
             toToken={toToken}
             onClose={handleCloseCompleted}
             onCancel={handleCancel}
+            inputVal={inputVal}
+            outputVal={outputVal}
           />
         )}
       </div>

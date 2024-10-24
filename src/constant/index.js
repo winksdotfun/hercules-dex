@@ -144,7 +144,7 @@ import zke from "../assets/images/zke.png";
      image: gvec,
      head: "gVEC",
      desc: "Governance VEC Token",
-     //address: "0xF9a6d89DCCb139E26da4b9DF00796C980b5975d2",
+     address: "0x1Af9735E9a3658dF9fa51c4D5AEAc89d162C2bc8",
    },
    {
      id: 17,

@@ -11,7 +11,9 @@ const TranscationCompleted = ({
   fromToken,
   toToken,
   onClose,
-  onCancel ,
+  onCancel,
+  inputVal,
+  outputVal,
 }) => {
   return (
     <div>
@@ -28,7 +30,7 @@ const TranscationCompleted = ({
             />
           </div>
           {/* <Loader /> */}
-          <img src={load} alt="" className='h-36 w-36 mx-auto mb-2'/>
+          <img src={load} alt="" className="h-36 w-36 mx-auto mb-2" />
           <div className="flex  gap-20 border-2 border-[#6c757d33] rounded-2xl p-2 items-center justify-center mx-auto">
             <div className="text-white flex">
               <img
@@ -59,7 +61,7 @@ const TranscationCompleted = ({
                 {fromToken.name}
               </p>
               <p className="sm:text-[16px] text-[11px] font-normal text-two  text-start text-white">
-                0.01
+               {inputVal}
               </p>
             </div>
             <Arrow />
@@ -71,7 +73,7 @@ const TranscationCompleted = ({
                 {toToken.name}
               </p>
               <p className="sm:text-[16px] text-[11px] font-normal text-two  text-start text-white">
-                0.4461
+                {outputVal}
               </p>
             </div>
           </div>

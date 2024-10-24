@@ -1,29 +1,61 @@
 import React, { useState, useEffect } from "react";
 import { IoIosClose } from "react-icons/io";
 import { Options, Commonbases } from "../constant/index";
-import getWalletDetails from '../integration'; // Import your getWalletDetails function
+import { ethers } from "ethers";
+import { useAccount } from "wagmi";
 
 const Token = ({ closeDropdown, onSelectToken }) => {
   const [searchTerm, setSearchTerm] = useState("");
-   const [walletAddress, setWalletAddress] = useState(null);
-   const [balances, setBalances] = useState({});
-
-   useEffect(() => {
-     const fetchWalletDetails = async () => {
-       const { walletAddress, balances } = await getWalletDetails();
-       setWalletAddress(walletAddress);
-       setBalances(balances);
-     };
-
-     fetchWalletDetails();
-   }, []);
-
-  // Filter tokens based on the search term
+  const [balances, setBalances] = useState({});
+  const { address: walletAddress, isConnected } = useAccount();
   const filteredOptions = Options.filter((option) =>
     option.head.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  
+  // Function to get the token balance
+  const fetchTokenBalance = async (tokenAddress) => {
+    try {
+      if (!isConnected || !walletAddress || !tokenAddress) return "0";
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(
+        tokenAddress,
+        [
+          // ERC20 ABI for balanceOf function
+          "function balanceOf(address account) view returns (uint256)",
+        ],
+        provider
+      );
+      const balance = await contract.balanceOf(walletAddress);
+      return parseFloat(ethers.utils.formatUnits(balance, 18)).toFixed(18);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      return "0";
+    }
+  };
+
+  // Fetch balances for all tokens when component mounts or search changes
+  useEffect(() => {
+    const fetchBalances = async () => {
+      if (!isConnected) {
+        // Clear balances if wallet is not connected
+        setBalances({});
+        return;
+      }
+
+      const balancesPromises = filteredOptions.map(async (option) => {
+        const balance = await fetchTokenBalance(option.address);
+        return { [option.id]: balance };
+      });
+      const balancesArray = await Promise.all(balancesPromises);
+      const balancesObject = balancesArray.reduce(
+        (acc, curr) => ({ ...acc, ...curr }),
+        {}
+      );
+      setBalances(balancesObject);
+    };
+
+    fetchBalances();
+  }, [filteredOptions, walletAddress, isConnected]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black py-2 ">
@@ -34,7 +66,7 @@ const Token = ({ closeDropdown, onSelectToken }) => {
             <h1 className="text-white font-semibold text-[1.4rem] text-left font-one">
               Select a token
             </h1>
-            
+
             <IoIosClose
               size={28}
               className="hover:text-white text-notConnectedText mt-1 items-center cursor-pointer"
@@ -81,33 +113,40 @@ const Token = ({ closeDropdown, onSelectToken }) => {
 
           <div>
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <div
-                  key={option.id}
-                  className="flex items-center justify-between hover:bg-inputBg rounded-2xl p-1 py-3 my-1 cursor-pointer"
-                  onClick={() => onSelectToken(option.head)}
-                >
-                  <div className="flex gap-2">
-                    <img
-                      src={option.image}
-                      alt=""
-                      className="h-[30px] w-[30px] rounded-full"
-                    />
-                    <div>
-                      <h6 className="text-white text-left font-semibold font-one text-xs leading-4">
-                        {option.head}
-                      </h6>
-                      <h6 className="font-one font-extralight text-[13px] text-balanceText">
-                        {option.desc}
-                      </h6>
+              filteredOptions
+                .sort(
+                  (a, b) =>
+                    parseFloat(balances[b.id] || 0) -
+                    parseFloat(balances[a.id] || 0)
+                )
+                .map((option) => (
+                  <div
+                    key={option.id}
+                    className="flex items-center justify-between hover:bg-inputBg rounded-2xl p-1 py-3 my-1 cursor-pointer"
+                    onClick={() => onSelectToken(option.head)}
+                  >
+                    <div className="flex gap-2">
+                      <img
+                        src={option.image}
+                        alt=""
+                        className="h-[30px] w-[30px] rounded-full"
+                      />
+                      <div>
+                        <h6 className="text-white text-left font-semibold font-one text-xs leading-4">
+                          {option.head}
+                        </h6>
+                        <h6 className="font-one font-extralight text-[13px] text-balanceText">
+                          {option.desc}
+                        </h6>
+                      </div>
                     </div>
+                    <h1 className="font-semibold text-sm text-balanceText">
+                      {parseFloat(balances[option.id]) === 0
+                        ? "0"
+                        : balances[option.id] || "0"}
+                    </h1>
                   </div>
-
-                  <h1 className="font-semibold text-sm text-balanceText hover:bg-inputBg">
-                    0
-                  </h1>
-                </div>
-              ))
+                ))
             ) : (
               <div className="text-left font-two text-white mt-4">
                 No results found

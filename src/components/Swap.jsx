@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useAccount } from "wagmi";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import musdc from "../assets/images/musdc.svg";
 import metis from "../assets/images/vmetis.png";
@@ -9,26 +10,28 @@ import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
 
-const Swap = () => {
-  const [isDropdownOpenFrom, setIsDropdownOpenFrom] = useState(false);
-  const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
-  const [isMaxHovered, setIsMaxHovered] = useState(false);
-  const [showTransactionSwap, setShowTransactionSwap] = useState(false); // State for TransactionSwap visibility
 
-  const [selectedOptionFrom, setSelectedOptionFrom] = useState({
-    name: "m.USDC",
-    image: musdc,
-    address: "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21",
-  });
-  const [selectedOptionTo, setSelectedOptionTo] = useState({
-    name: "METIS",
-    image: metis,
-    address: "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-  });
-  const [inputValue, setInputValue] = useState("");
-  const [fromTokenBalance, setFromTokenBalance] = useState("0.00");
-  const [toTokenBalance, setToTokenBalance] = useState("0.00");
-  const [walletAddress, setWalletAddress] = useState("");
+const Swap = () => {
+ const [isDropdownOpenFrom, setIsDropdownOpenFrom] = useState(false);
+ const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
+ const [isMaxHovered, setIsMaxHovered] = useState(false);
+ const [showTransactionSwap, setShowTransactionSwap] = useState(false); // State for TransactionSwap visibility
+
+ const [selectedOptionFrom, setSelectedOptionFrom] = useState({
+   name: "m.USDC",
+   image: musdc,
+   address: "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21",
+ });
+ const [selectedOptionTo, setSelectedOptionTo] = useState({
+   name: "METIS",
+   image: metis,
+   address: "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
+ });
+ const [inputValue, setInputValue] = useState("");
+ const [ouputvalue, setOutputValue] = useState("0.0")
+ const [fromTokenBalance, setFromTokenBalance] = useState("0.00");
+ const [toTokenBalance, setToTokenBalance] = useState("0.00");
+ const { address: walletAddress, isConnected } = useAccount();
 
  const fetchTokenBalance = async (tokenAddress) => {
    if (!walletAddress) return "0.00";
@@ -37,15 +40,11 @@ const Swap = () => {
      const provider = new ethers.providers.Web3Provider(window.ethereum);
      const contract = new ethers.Contract(
        tokenAddress,
-       [
-         // Minimal ABI for ERC20
-         "function balanceOf(address owner) view returns (uint256)",
-       ],
+       ["function balanceOf(address owner) view returns (uint256)"],
        provider
      );
 
      const balance = await contract.balanceOf(walletAddress);
-     console.log(`Balance for ${tokenAddress}:`, balance.toString()); // Log raw balance
      return ethers.utils.formatUnits(balance, 18);
    } catch (error) {
      console.error("Failed to fetch balance:", error);
@@ -53,129 +52,138 @@ const Swap = () => {
    }
  };
 
-
-  // Function to get balances for both tokens
- const getBalances = async () => {
-   setLoadingBalances(true); // Start loading
-   const fromBalance = await fetchTokenBalance(selectedOptionFrom.address);
-   const toBalance = await fetchTokenBalance(selectedOptionTo.address);
-
-   setFromTokenBalance(fromBalance);
-   setToTokenBalance(toBalance);
-   setLoadingBalances(false); // End loading
- };
-const checkNetwork = async () => {
-  const provider =
-    window.ethereum != null
-      ? new ethers.providers.Web3Provider(window.ethereum)
-      : ethers.providers.getDefaultProvider();
-  console.log("provider", provider);
-  const network = await provider.getNetwork();
-  console.log("Connected to network:", network);
+const formatBalance = (balance) => {
+  const numBalance = parseFloat(balance);
+  if (numBalance < 0.00001 && numBalance > 0) {
+    return "<0.00001";
+  }
+  return numBalance.toFixed(5);
 };
 
-useEffect(() => {
-  checkNetwork();
-}, []);
+const getBalances = async () => {
+  if (!isConnected) {
+    setFromTokenBalance("0.00");
+    setToTokenBalance("0.00");
+    return;
+  }
 
-  useEffect(() => {
-    if (walletAddress) {
-      getBalances();
-    }
-  }, [walletAddress, selectedOptionFrom, selectedOptionTo]);
+  const fromBalance = await fetchTokenBalance(selectedOptionFrom.address);
+  const toBalance = await fetchTokenBalance(selectedOptionTo.address);
 
+  setFromTokenBalance(formatBalance(fromBalance));
+  setToTokenBalance(formatBalance(toBalance));
+};
+ useEffect(() => {
+   if (isConnected && walletAddress) {
+     getBalances();
+   }
+ }, [isConnected, walletAddress, selectedOptionFrom, selectedOptionTo]);
 
-  const toggleDropdownFrom = () => {
-    setIsDropdownOpenFrom(!isDropdownOpenFrom);
-    setIsDropdownOpenTo(false);
-  };
+ const checkNetwork = async () => {
+   const provider =
+     window.ethereum != null
+       ? new ethers.providers.Web3Provider(window.ethereum)
+       : ethers.providers.getDefaultProvider();
+   console.log("provider", provider);
+   const network = await provider.getNetwork();
+   console.log("Connected to network:", network);
+ };
 
-  const toggleDropdownTo = () => {
-    setIsDropdownOpenTo(!isDropdownOpenTo);
-    setIsDropdownOpenFrom(false);
-  };
+ useEffect(() => {
+   checkNetwork();
+ }, []);
 
-  const handleOptionSelectFrom = (optionName) => {
-    const selected = Options.find((opt) => opt.head === optionName);
-    if (!selected) return;
+ const toggleDropdownFrom = () => {
+   setIsDropdownOpenFrom(!isDropdownOpenFrom);
+   setIsDropdownOpenTo(false);
+ };
 
-    if (selected.head === selectedOptionTo.name) {
-      setSelectedOptionTo(selectedOptionFrom);
-      setSelectedOptionFrom({
-        name: selected.head,
-        image: selected.image,
-        address: selected.address
-      });
-    } else {
-      setSelectedOptionFrom({
-        name: selected.head,
-        image: selected.image,
-        address: selected.address,
-      });
-    }
-    setIsDropdownOpenFrom(false);
-  };
+ const toggleDropdownTo = () => {
+   setIsDropdownOpenTo(!isDropdownOpenTo);
+   setIsDropdownOpenFrom(false);
+ };
+ const handleOptionSelectFrom = (optionName) => {
+   const selected = Options.find((opt) => opt.head === optionName);
+   if (!selected) return;
 
-  const handleOptionSelectTo = (optionName) => {
-    const selected = Options.find((opt) => opt.head === optionName);
-    if (!selected) return;
+   if (selected.head === selectedOptionTo.name) {
+     setSelectedOptionTo(selectedOptionFrom);
+     setSelectedOptionFrom({
+       name: selected.head,
+       image: selected.image,
+       address: selected.address,
+     });
+   } else {
+     setSelectedOptionFrom({
+       name: selected.head,
+       image: selected.image,
+       address: selected.address,
+     });
+   }
+   setIsDropdownOpenFrom(false);
+ };
 
-    if (selected.head === selectedOptionFrom.name) {
-      setSelectedOptionFrom(selectedOptionTo);
-      setSelectedOptionTo({
-        name: selected.head,
-        image: selected.image,
-        address: selected.address,
-      });
-    } else {
-      setSelectedOptionTo({
-        name: selected.head,
-        image: selected.image,
-        address: selected.address,
-      });
-    }
-    setIsDropdownOpenTo(false);
-  };
+ const handleOptionSelectTo = (optionName) => {
+   const selected = Options.find((opt) => opt.head === optionName);
+   if (!selected) return;
 
-  const closeDropdown = () => {
-    setIsDropdownOpenFrom(false);
-    setIsDropdownOpenTo(false);
-  };
+   if (selected.head === selectedOptionFrom.name) {
+     setSelectedOptionFrom(selectedOptionTo);
+     setSelectedOptionTo({
+       name: selected.head,
+       image: selected.image,
+       address: selected.address,
+     });
+   } else {
+     setSelectedOptionTo({
+       name: selected.head,
+       image: selected.image,
+       address: selected.address,
+     });
+   }
+   setIsDropdownOpenTo(false);
+ };
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    const validValue = value.replace(/[^0-9.]/g, "");
-    if (validValue.split(".").length > 2) return;
+ const closeDropdown = () => {
+   setIsDropdownOpenFrom(false);
+   setIsDropdownOpenTo(false);
+ };
 
-    setInputValue(validValue);
-  };
+ const handleInputChange = (e) => {
+   const value = e.target.value;
+   const validValue = value.replace(/[^0-9.]/g, "");
+   if (validValue.split(".").length > 2) return;
 
-  const handleKeyPress = (e) => {
-    if (e.key === "-") {
-      e.preventDefault();
-    }
-  };
+   setInputValue(validValue);
+ };
 
-  const handleSwap = () => {
-    const temp = selectedOptionFrom;
-    setSelectedOptionFrom(selectedOptionTo);
-    setSelectedOptionTo(temp);
-  };
+ const handleKeyPress = (e) => {
+   if (e.key === "-") {
+     e.preventDefault();
+   }
+ };
 
-  const handleMaxClick = () => {
-    setInputValue(balanceData ? balanceData.formatted : "0");
-  };
+ const handleSwap = () => {
+   const temp = selectedOptionFrom;
+   setSelectedOptionFrom(selectedOptionTo);
+   setSelectedOptionTo(temp);
+ };
 
-  // Handle showing the TransactionSwap component
-  const handleShowTransactionSwap = () => {
-    setShowTransactionSwap(true);
-  };
+ const handleMaxClick = () => {
+   setInputValue( fromTokenBalance);
+ };
 
-  // Close the TransactionSwap component
-  const handleCloseTransactionSwap = () => {
-    setShowTransactionSwap(false);
-  };
+ // Handle showing the TransactionSwap component
+ const handleShowTransactionSwap = () => {
+   setShowTransactionSwap(true);
+ };
 
+ // Close the TransactionSwap component
+ const handleCloseTransactionSwap = () => {
+   setShowTransactionSwap(false);
+ };
+ const isInsufficientBalance = parseFloat(inputValue) > parseFloat(fromTokenBalance);
+ 
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-black relative">
       <img
@@ -228,7 +236,7 @@ useEffect(() => {
               <input
                 type="number"
                 placeholder="0.0"
-                className="text-white bg-inputBg text-xs px-2 sm:text-xl font-semibold p-1 sm:p-2 w-full focus:outline-none rounded-xl placeholder:text-sm sm:placeholder:text-2xl"
+                className="text-white bg-inputBg text-xs px-2 sm:text-xl font-semibold p-1 sm:p-2 w-full focus:outline-none rounded-2xl placeholder:text-sm sm:placeholder:text-2xl"
                 style={{ WebkitAppearance: "none", MozAppearance: "textfield" }}
                 min={0}
                 value={inputValue}
@@ -236,7 +244,7 @@ useEffect(() => {
                 onKeyPress={handleKeyPress}
               />
               <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
-                Balance:{fromTokenBalance}
+                Balance:{isConnected ? fromTokenBalance: "0.0"}
               </div>
             </div>
 
@@ -257,7 +265,7 @@ useEffect(() => {
         </div>
 
         <button
-          onClick={handleShowTransactionSwap} // Show TransactionSwap on button click
+          onClick={handleSwap} // Show TransactionSwap on button click
           className={`hover:bg-notConnectedBg rounded-full p-1 sm:p-2 w-fit absolute left-[7.2rem] sm:left-[9.9rem] -mt-1 sm:-mt-2.5 ${
             isDropdownOpenFrom || isDropdownOpenTo ? "-z-50" : ""
           }`}
@@ -319,24 +327,48 @@ useEffect(() => {
               <input
                 type="number"
                 placeholder="0.0"
-                className="text-white bg-inputBg text-xs px-2 sm:text-xl font-semibold p-1 sm:p-2 w-full focus:outline-none rounded-xl placeholder:text-sm sm:placeholder:text-2xl"
+                value={ouputvalue}
+                className="text-white bg-inputBg text-xs px-2 sm:text-2xl font-semibold p-1 sm:p-2 w-full focus:outline-none rounded-xl placeholder:text-sm sm:placeholder:text-2xl"
                 style={{ WebkitAppearance: "none", MozAppearance: "textfield" }}
                 disabled
               />
               <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
-                Balance: {toTokenBalance}
+                Balance: {isConnected? toTokenBalance : "0.0"}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 mt-5">
-          <button
-            className="text-black bg-custom-gradient font-two cursor-pointer bg-notConnectedBg rounded-full p-2 text-lg font-semibold text-center items-center"
-            onClick={() => setShowTransactionSwap(true)}
+        {isInsufficientBalance && (
+          <div
+            role="alert"
+            aria-live="polite"
+            aria-atomic="true"
+            className="alert mt-3 mb-0 bg-[#ff353519] bg-opacity-50 text-[#ff3535] border-none font-normal px-6 text-[13px] text-left p-2 rounded-full"
           >
-            Swap
-          </button>
+            Error: Insufficient Balance
+          </div>
+        )}
+
+        <div className="flex flex-col gap-4 mt-5">
+          {!isConnected && (
+            <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-3 rounded-xl font-semibold text-lg mt-1">
+              Not Connected
+            </button>
+          )}
+            {isConnected && ( !isInsufficientBalance && inputValue > 0 ? (
+            <button
+              className="text-black bg-custom-gradient font-two cursor-pointer bg-notConnectedBg rounded-full p-2 text-lg font-semibold text-center items-center"
+              onClick={() => setShowTransactionSwap(true)}
+            >
+              Swap
+            </button>
+          ) : (
+            <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-3 rounded-xl font-semibold text-lg mt-1">
+              Swap
+            </button>
+          ))}
+        
         </div>
       </div>
 
@@ -345,6 +377,8 @@ useEffect(() => {
           initialFromToken={selectedOptionFrom}
           initialToToken={selectedOptionTo}
           onClose={handleCloseTransactionSwap} // Pass close function
+          inpVal={inputValue}
+          outVal = {ouputvalue}
         />
       )}
     </div>

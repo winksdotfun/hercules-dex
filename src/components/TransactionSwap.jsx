@@ -11,6 +11,8 @@ const TransactionSwap = ({
   onSwapClick,
   onClose,
   onCancel,
+  inputVal, 
+  outputVal
 }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black py-2">
@@ -33,11 +35,11 @@ const TransactionSwap = ({
               className="sm:w-10 w-7 sm:h-10 h-7 rounded-full object-cover mr-2"
             />
             <div className="flex flex-col">
-              <p className="text-white font-semibold focus:outline-none text-[13px] sm:text-base">
+              <p className="text-white font-semibold focus:outline-none text-[13px] sm:text-base text-left">
                 {fromToken.name}
               </p>
               <h1 className="sm:text-sm text-[11px] font-medium text-two text-balanceText text-start">
-                0.01 {/* Replace with actual from amount */}
+                {inputVal}
               </h1>
             </div>
           </div>
@@ -54,14 +56,22 @@ const TransactionSwap = ({
               className="sm:w-10 w-7 sm:h-10 h-7 rounded-full object-cover mr-2"
             />
             <div className="flex flex-col">
-              <p className="text-white font-semibold focus:outline-none text-[13px] sm:text-base">
+              <p className="text-white font-semibold focus:outline-none text-[13px] sm:text-base text-left">
                 {toToken.name}
               </p>
               <h1 className="sm:text-sm text-[11px] font-medium text-two text-balanceText text-start">
-                0.446069 {/* Replace with actual to amount */}
+                {outputVal}
               </h1>
             </div>
           </div>
+        </div>
+        <div
+          role="alert"
+          aria-live="polite"
+          aria-atomic="true"
+          className="alert mt-3 mb-0 bg-[#ff353519] bg-opacity-50 text-[#ff3535] border-none font-normal px-6 text-[13px] text-left p-2 rounded-full"
+        >
+          Error: You cancelled the swap
         </div>
 
         <div className="text-white my-6 flex flex-col gap-1">
@@ -70,7 +80,7 @@ const TransactionSwap = ({
               Minimum received
             </p>
             <p className="sm:text-[16px] text-[11px] font-normal text-two text-right items-center">
-              0.4438 {toToken.name} {/* Replace with actual value */}
+              {outputVal} {toToken.name} {/* Replace with actual value */}
             </p>
           </div>
           <div className="flex justify-between">
@@ -92,7 +102,6 @@ const TransactionSwap = ({
             </p>
           </div>
         </div>
-
         <div className="flex gap-8">
           <button
             onClick={onCancel}
