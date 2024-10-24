@@ -137,7 +137,36 @@
 .font-wider {
   font-stretch:ultra-expanded
 }
+.icon-gradient {
+  font-size: 2rem;
+  /* Adjust as needed */
+  background: linear-gradient(270deg, #e5814a, #f1d286);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
 
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
 
+  100% {
+    transform: rotate(360deg);
+  }
+}
 
+.spinner {
+  animation: spin 1s linear infinite;
+  background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNSIgZmlsbD0ibm9uZSI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMi4zMjIiIHI9IjkiIHN0cm9rZT0iIzM1MzUzNSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZmlsbD0idXJsKCNhKSIgZD0iTTEyIDQuMzIydi0yYTEwIDEwIDAgMCAwLTEwIDEwaDJhOCA4IDAgMCAxIDgtOCIvPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iYSIgeDE9IjEyIiB4Mj0iMiIgeTE9IjcuNDMzIiB5Mj0iNy40MzMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBzdG9wLWNvbG9yPSIjRTY4MTRBIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRjFEMjg2Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PC9zdmc+) no-repeat center center;
+  background-size: contain;
+  height: 24px;
+  width: 24px;
+}
 
+.success-icon {
+  background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNSIgZmlsbD0ibm9uZSI+PHBhdGggc3Ryb2tlPSJ1cmwoI2EpIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMiIgZD0ibTkgMTIuMzIyIDIgMiA0LTRtNiAyYTkgOSAwIDEgMS0xOCAwIDkgOSAwIDAgMSAxOCAwIi8+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJhIiB4MT0iMjEiIHgyPSIzIiB5MT0iMTIuNTIyIiB5Mj0iMTIuNTIyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agc3RvcC1jb2xvcj0iI0U2ODE0QSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI0YxRDI4NiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjwvc3ZnPg==);
+  background-position: top;
+  height: 24px;
+  width: 25px;
+}

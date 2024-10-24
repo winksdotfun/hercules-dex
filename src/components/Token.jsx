@@ -1,17 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoIosClose } from "react-icons/io";
 import { Options, Commonbases } from "../constant/index";
+import getWalletDetails from '../integration'; // Import your getWalletDetails function
 
 const Token = ({ closeDropdown, onSelectToken }) => {
   const [searchTerm, setSearchTerm] = useState("");
+   const [walletAddress, setWalletAddress] = useState(null);
+   const [balances, setBalances] = useState({});
+
+   useEffect(() => {
+     const fetchWalletDetails = async () => {
+       const { walletAddress, balances } = await getWalletDetails();
+       setWalletAddress(walletAddress);
+       setBalances(balances);
+     };
+
+     fetchWalletDetails();
+   }, []);
 
   // Filter tokens based on the search term
   const filteredOptions = Options.filter((option) =>
     option.head.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black py-2 font-custom">
+    <div className="fixed inset-0 flex items-center justify-center bg-black py-2 ">
       <div className="bg-primaryBg rounded-3xl relative border border-[#222] w-full m-2 sm:w-[400px] h-fit">
         {/* Header and Input - Fixed Top */}
         <div className="sticky top-0 bg-primaryBg z-10 px-[1.5rem] pt-[1rem] pb-[.5rem] rounded-3xl">
@@ -19,6 +34,7 @@ const Token = ({ closeDropdown, onSelectToken }) => {
             <h1 className="text-white font-semibold text-[1.4rem] text-left font-one">
               Select a token
             </h1>
+            
             <IoIosClose
               size={28}
               className="hover:text-white text-notConnectedText mt-1 items-center cursor-pointer"
@@ -28,7 +44,7 @@ const Token = ({ closeDropdown, onSelectToken }) => {
           <input
             type="text"
             placeholder="Search by name or address"
-            className="bg-inputBg border-none rounded-lg text-white focus:outline-none focus:ring-0 p-1 w-full mt-4 placeholder:text-white placeholder:text-sm font-one pb-2 px-2"
+            className="bg-inputBg border-none rounded-lg text-white focus:outline-none focus:ring-0 p-1 w-full mt-4 placeholder:text-white placeholder:text-sm font-two pb-2 px-2"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
