@@ -7,7 +7,7 @@ const useResponsiveModalSize = () => {
     const handleResize = () => {
       // Set modal size to 'auto' if width is less than 450px, otherwise 'compact'
       if (window.innerWidth < 450) {
-        setModalSize("auto");
+        setModalSize("compact");
       } else {
         setModalSize("compact");
       }

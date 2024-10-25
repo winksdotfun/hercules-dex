@@ -199,3 +199,9 @@
     /* Make it responsive to screen size */
   }
 }
+
+/* App.css */
+/* Hide the "What is a Wallet?" description */
+.rainbowkit-modal .rk-wallet-info {
+  display: none !important;
+}

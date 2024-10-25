@@ -13,7 +13,6 @@ import {
 import { WagmiProvider } from "wagmi";
 import { metis } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import useResponsiveModalSize from "./components/hooks/useResponsiveModalSize"; // Import the hook
 
 const queryClient = new QueryClient();
 
@@ -25,17 +24,16 @@ const config = getDefaultConfig({
 });
 
 function App() {
-  const modalSize = useResponsiveModalSize(); // Use the custom hook
-
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           chains={[metis]}
-          modalSize={modalSize} // Apply the responsive modal size
+          modalSize="compact"
           theme={darkTheme()}
+          showRecentTransactions={true}
         >
-          <div className="h-screen font-custom flex justify-center items-center p-2 ">
+          <div className="h-screen font-custom flex justify-center items-center p-2">
             <Swap />
             {/* <TransactionSwap/> */}
             {/* <TranscationCompleted/> */}
