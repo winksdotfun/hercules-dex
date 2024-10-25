@@ -1,4 +1,5 @@
-import React from "react";
+import React,{useState} from "react";
+
 import { IoIosClose } from "react-icons/io";
 import metis from "../assets/images/metis.png";
 import musdc from "../assets/images/musdc.svg";
@@ -14,7 +15,7 @@ const TransactionSwap = ({
   inputVal, 
   outputVal
 }) => {
-
+ const [isMaxHovered, setIsMaxHovered] = useState(false);
   const formatBalance = (balance) => {
     const numBalance = parseFloat(balance);
     if (numBalance < 0.00001 && numBalance > 0) {
@@ -119,8 +120,13 @@ const TransactionSwap = ({
             Cancel
           </button>
           <button
+            onMouseDown={() => setIsMaxHovered(true)}
+            onMouseUp={() => setIsMaxHovered(false)}
+            onMouseLeave={() => setIsMaxHovered(false)}
             onClick={onSwapClick}
-            className="text-black bg-custom-gradient font-two bg-notConnectedBg w-1/2 p-1.5 sm:p-2 rounded-full font-semibold text-xs sm:text-lg text-center items-center"
+            className={`${
+              isMaxHovered ? "text-white" : "text-black"
+            }  bg-custom-gradient font-two bg-notConnectedBg w-1/2 p-1.5 sm:p-2 rounded-full font-semibold text-xs sm:text-lg text-center items-center`}
           >
             Swap
           </button>

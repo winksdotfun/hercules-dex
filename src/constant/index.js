@@ -39,21 +39,21 @@ import zke from "../assets/images/zke.png";
      image: alcx,
      head: "ALCX",
      desc: "Alchemix",
-     // address: "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401",
+     address: "0x303c4F39EA359155C698807168e9Dc3aA1dF2b95",
    },
    {
      id: 2,
      image: aieth,
      head: "aIETH",
      desc: "Alchemix ETH",
-     //address: "0xF94BE4401483172dc1F72120c01ace2888EBdfc4",
+     address: "0x0E17934B9735D479B2388347fAeF0F4e58b9cc06",
    },
    {
      id: 3,
      image: aiusd,
      head: "aIUSD",
      desc: "Alchemix USD",
-     // address: "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401",
+     address: "0x303241e2B3b4aeD0bb0F8623e7442368FED8Faf3",
    },
    {
      id: 4,
@@ -123,14 +123,14 @@ import zke from "../assets/images/zke.png";
      image: froska,
      head: "FROSKA",
      desc: "Froska",
-     //address: "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401",
+     address: "0x920912668fE3B30F2f286E913a5F3c974e002aEB",
    },
    {
      id: 14,
      image: fxs,
      head: "FXS",
      desc: "Frax Share",
-     //address:'0x2550761D44e709710C15B718B2B73A65151a8488'
+     address: "0x23432452B720C80553458496D4D9d7C5003280d0",
    },
    {
      id: 15,
@@ -195,27 +195,33 @@ import zke from "../assets/images/zke.png";
      desc: "Monkex Token",
      address: "0x186573b175aDF5801cF95Fb06b232ccAB123c6F4",
    },
-   { id: 24, image: muttis, head: "MUTTIS", desc: "MUTTIS" },
+   {
+     id: 24,
+     image: muttis,
+     head: "MUTTIS",
+     desc: "MUTTIS",
+     address: "0xa0E3E174e41A74ffFCCED8edc56c3a495abF3352",
+   },
    {
      id: 25,
      image: pump,
      head: "PUMP",
      desc: "Pumpkin Token",
-     //address: "0x2EDE18CB7FeA57F5e8E7e555f80FaB4D49AcA234",
+     address: "0x5C7c4E4b949c97EC82Ff93120928d911Bc4E0922",
    },
    {
      id: 26,
      image: sfrax,
      head: "sFRAX",
      desc: "Staked FRAX",
-     // address: "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401",
+     address: "0xe4796cCB6bB5DE2290C417Ac337F2b66CA2E770E",
    },
    {
      id: 27,
      image: sfrxeth,
      head: "sfrxETH",
      desc: "Staked Frax Ether",
-     // address: "0xD3017943cD7Fe1D7D3eE9BAd909d182639F95eD0",
+     address: "0x1f55a02A049033E3419a8E2975cF3F572F4e6E9A",
    },
    {
      id: 28,
@@ -236,10 +242,15 @@ import zke from "../assets/images/zke.png";
      image: vesta,
      head: "VESTA",
      desc: "VestaDAO",
-     //doubt
-     address: "0x38A7362Dab9b85Ba605Ff26e2BD82b328BDe99f1",
+     address: "0x848E329d9C3FF5D3078C4670c773651155386C46",
    },
-   { id: 31, image: vmetis, head: "vMETIS", desc: "Vector METIS" },
+   {
+     id: 31,
+     image: vmetis,
+     head: "vMETIS",
+     desc: "Vector METIS",
+     address: "0x824CCDb1f156188436dFC059320608133c057aB3",
+   },
    {
      id: 32,
      image: wagmi,
@@ -269,6 +280,7 @@ import zke from "../assets/images/zke.png";
      address: "0xdf020cBd1897133978C7FcDF04B07E69d8934Efc",
    },
  ];
+
 
 
 
