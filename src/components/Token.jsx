@@ -170,7 +170,7 @@ const Token = ({ closeDropdown, onSelectToken }) => {
         {/* Cancel Button - Fixed Bottom */}
         <div className="sticky bottom-0 rounded-3xl bg-primaryBg z-10 px-2 py-1.5 sm:px-[1.5rem] sm:py-[1rem]">
           <button
-            className="w-full bg-[#222222ad] hover:bg-inputBg text-white py-1 sm:py-2 font-one font-medium rounded-full text-base sm:text-lg"
+            className="w-full bg-[#222222ad] hover:bg-inputBg text-white py-1 sm:py-2 font-one font-medium rounded-full text-sm sm:text-lg"
             onClick={closeDropdown}
           >
             Close
