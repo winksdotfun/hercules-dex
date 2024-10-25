@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import TransactionSwap from "./TransactionSwap";
 import TranscationCompleted from "./TranscationCompleted";
+import { Swap } from "../integration";
 
 const SwapContainer = ({ initialFromToken, initialToToken, onClose, inpVal, outVal }) => {
     const [showSwapModal, setShowSwapModal] = useState(true); // Track whether to show the modal
@@ -10,7 +11,12 @@ const SwapContainer = ({ initialFromToken, initialToToken, onClose, inpVal, outV
     const [outputVal, setOutputValue] = useState(outVal);
 
 
-    const handleSwapClick = () => {
+    const handleSwapClick = async () => {
+
+      console.log("vugygfytfuy");
+      const res = await Swap();
+      console.log("res",res);
+      
       setShowSwapModal(false); // Switch to TransactionCompleted
     };
 

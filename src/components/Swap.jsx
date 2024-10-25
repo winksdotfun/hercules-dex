@@ -9,7 +9,7 @@ import { Options } from "../constant/index"; // Ensure Options contains token da
 import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
-import { GetApproval } from "../integration";
+import { GetApproval, GetOutAmount } from "../integration";
 
 
 const Swap = () => {
@@ -166,6 +166,18 @@ const getBalances = async () => {
     
   }
  }
+ const handleGetOut = async(validValue) => {
+  try {
+    const res = await GetOutAmount(validValue, selectedOptionFrom.address, selectedOptionTo.address)
+
+    console.log("res",res);
+   
+    
+  } catch (error) {
+    console.log("eerror in get out",error);
+    
+  }
+ }
 
  const handleInputChange = (e) => {
   if(selectedOptionFrom === "METIS"){
@@ -178,7 +190,7 @@ setMETIS(true);
    setInputValue(validValue);
 
    handleApproval()
-
+   handleGetOut(validValue)
    
  };
 

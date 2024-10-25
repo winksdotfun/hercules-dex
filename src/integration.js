@@ -271,3 +271,100 @@ try {
 
 
 };
+
+
+export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
+
+  console.log("getting out");
+  
+
+  console.log("ammount",amountIn);
+  console.log("tokenIn",tokenIn);
+  console.log("tokenOut",tokenOut);
+  
+// provider
+const provider =
+  window.ethereum != null
+    ? new ethers.providers.Web3Provider(window.ethereum)
+    : ethers.providers.getDefaultProvider();
+console.log("provider", provider);
+
+const blockno = await provider.getBlockNumber()
+//signer
+
+const signer = provider.getSigner();
+GetOutAmount
+console.log("signer", signer);
+// contract instance
+
+
+
+const contract = new ethers.Contract(contract_address, abi, signer);
+
+console.log("contract", contract);
+
+// console.log("asadsasf",contract.queryNoSplit());
+
+
+try {
+  // const tx = await contract.queryNoSplit(  blockno    );
+    
+    const val = ethers.utils.parseEther(amountIn)
+  const tx = await contract.queryAdapter(  val, tokenIn, tokenOut, 1    );
+    
+    
+    
+      console.log("tx", tx);
+      return tx[0].toString();
+
+
+      
+} catch (error) {
+  console.log("erior",error);
+}
+};
+
+export const Swap = async () => {
+
+  console.log("getting swap");
+  
+
+  
+// provider
+const provider =
+  window.ethereum != null
+    ? new ethers.providers.Web3Provider(window.ethereum)
+    : ethers.providers.getDefaultProvider();
+console.log("provider", provider);
+
+const blockno = await provider.getBlockNumber()
+//signer
+
+const signer = provider.getSigner();
+GetOutAmount
+console.log("signer", signer);
+// contract instance
+
+const contract = new ethers.Contract(contract_address, abi, signer);
+
+console.log("contract", contract);
+
+// console.log("asadsasf",contract.queryNoSplit());
+
+
+try {
+  // const tx = await contract.queryNoSplit(  blockno    );
+    
+  const tx = await contract.swapNoSplitToETH(  [100,2302329397750,["0xEA32A96608495e54156Ae48931A7c20f0dcc1a21","0x75cb093E4D61d2A2e65D8e0BBb01DE8d89b53481"],["0xfccb98649Cb44B9729e04ef1Adb41359d3f4699a",],["0xEf874FeDe49CF49940E8C472f3e58E75ea65b34c",]],"0","0x2B258418ee8ba6822472F722bC558Ce62D42280D"  );
+    
+    
+    
+      console.log("tx", tx);
+      return tx
+
+
+      
+} catch (error) {
+  console.log("erior",error);
+}
+};
