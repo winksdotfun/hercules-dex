@@ -28,7 +28,7 @@ const TranscationCompleted = ({
       <div className="fixed inset-0 flex items-center justify-center bg-black py-2">
         <div className="p-3 sm:p-6 rounded-3xl border-[#6c757d33] border-[.5px] shadow-md w-fit sm:w-[490px] md:w-[500px] bg-primaryBg">
           <div className="mb-3 sm:mb-7 flex justify-between items-center">
-            <h1 className="text-start text-white text-lg sm:text-2xl text-two font-semibold">
+            <h1 className="text-start text-white text-base sm:text-2xl text-two font-semibold">
               Swap
             </h1>
             <IoIosClose
@@ -38,13 +38,17 @@ const TranscationCompleted = ({
             />
           </div>
           {/* <Loader /> */}
-          <img src={load} alt="" className="h-36 w-36 mx-auto mb-2" />
+          <img
+            src={load}
+            alt=""
+            className="sm:h-36 w-20 h-20 sm:w-36 mx-auto mb-2"
+          />
           <div className="flex  gap-20 border-2 border-[#6c757d33] rounded-2xl p-2 items-center justify-center mx-auto">
             <div className="text-white flex">
               <img
                 src={fromToken.image}
                 alt=""
-                className="  w-7  h-7 rounded-full object-cover mr-2"
+                className="w-5  sm:w-7  h-5 sm:h-7 rounded-full object-cover mr-2"
               />
               <p className="text-white font-semibold focus:outline-none text-[13px] sm:text-xl">
                 {fromToken.name}
@@ -55,7 +59,7 @@ const TranscationCompleted = ({
               <img
                 src={toToken.image}
                 alt=""
-                className="  w-7  h-7 rounded-full object-cover mr-2"
+                className="  w-5  sm:w-7  h-5 sm:h-7 rounded-full object-cover mr-2"
               />
 
               <h1 className="text-white font-semibold focus:outline-none text-[13px] sm:text-xl">
@@ -69,7 +73,7 @@ const TranscationCompleted = ({
                 {fromToken.name}
               </p>
               <p className="sm:text-[16px] text-[11px] font-normal text-two  text-start text-white">
-               {formatBalance(inputVal)}
+                {formatBalance(inputVal)}
               </p>
             </div>
             <Arrow />

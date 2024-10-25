@@ -398,9 +398,7 @@ export const getOutAmount = async (
 
     const signer = provider.getSigner();
     const contract = new ethers.Contract(contract_address, abi, signer);
-    console.log("Available functions in contract:", contract.functions);
-    console.log("Contract ABI:", abi);
-    console.log("Contract Address:", contract_address);
+    
 
     // Convert input amount to Wei
     const amountInWei = ethers.utils.parseEther(amountIn.toString());
