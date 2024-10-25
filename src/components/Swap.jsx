@@ -266,7 +266,7 @@ const getBalances = async () => {
       <img
         src={logo}
         alt=""
-        className="bg-black p-[5px] rounded-md h-[20px] sm:h-[40px] w-[50px] sm:w-[90px] mx-auto  sm:mb-4"
+        className="bg-black p-[5px] rounded-md h-[25px] sm:h-[40px] w-[60px] sm:w-[90px] mx-auto  sm:mb-4"
       />
 
       <div className=" p-3 sm:p-6 rounded-2xl shadow-md w-fit sm:w-[490px] md:w-[500px] bg-primaryBg">
