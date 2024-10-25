@@ -11,25 +11,28 @@ import {
   darkTheme,
 } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
-import { metis } from "wagmi/chains"; 
+import { metis } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import useResponsiveModalSize from "./components/hooks/useResponsiveModalSize"; // Import the hook
 
 const queryClient = new QueryClient();
 
 const config = getDefaultConfig({
   appName: "My RainbowKit App",
   projectId: "YOUR_PROJECT_ID",
-  chains: [metis], 
-  ssr: true, 
+  chains: [metis],
+  ssr: true,
 });
 
 function App() {
+  const modalSize = useResponsiveModalSize(); // Use the custom hook
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           chains={[metis]}
-          modalSize="compact"
+          modalSize={modalSize} // Apply the responsive modal size
           theme={darkTheme()}
         >
           <div className="h-screen font-custom flex justify-center items-center m-2 ">
