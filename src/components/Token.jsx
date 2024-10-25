@@ -65,8 +65,8 @@ const Token = ({ closeDropdown, onSelectToken }) => {
   }, [filteredOptions, walletAddress, isConnected]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black py-2 ">
-      <div className="bg-primaryBg rounded-3xl relative border border-[#222] w-full m-2 sm:w-[400px] h-fit">
+    <div className="fixed inset-0 flex items-center justify-center bg-black py-1 sm:py-2 ">
+      <div className="bg-primaryBg rounded-3xl relative border border-[#222] w-full my-1 mx-2 sm:m-2 sm:w-[400px] h-fit">
         {/* Header and Input - Fixed Top */}
         <div className="sticky top-0 bg-primaryBg z-10 px-2 p-1 sm:px-[1.5rem]  sm:pt-[1rem] sm:pb-[.5rem] rounded-3xl">
           <div className="flex justify-between items-center">
