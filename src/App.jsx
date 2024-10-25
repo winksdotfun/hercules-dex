@@ -24,7 +24,7 @@ function App() {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider chains={[metis]}>
-          <div className="h-screen font-custom flex justify-center items-center ">
+          <div className="h-screen font-custom flex justify-center items-center m-2 ">
             <Swap />
             {/* <TransactionSwap/> */}
             {/* <TranscationCompleted/> */}

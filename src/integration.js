@@ -273,56 +273,56 @@ try {
 };
 
 
-export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
+// export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
 
-  console.log("getting out");
+//   console.log("getting out");
   
 
-  console.log("ammount",amountIn);
-  console.log("tokenIn",tokenIn);
-  console.log("tokenOut",tokenOut);
+//   console.log("ammount",amountIn);
+//   console.log("tokenIn",tokenIn);
+//   console.log("tokenOut",tokenOut);
   
-// provider
-const provider =
-  window.ethereum != null
-    ? new ethers.providers.Web3Provider(window.ethereum)
-    : ethers.providers.getDefaultProvider();
-console.log("provider", provider);
+// // provider
+// const provider =
+//   window.ethereum != null
+//     ? new ethers.providers.Web3Provider(window.ethereum)
+//     : ethers.providers.getDefaultProvider();
+// console.log("provider", provider);
 
-const blockno = await provider.getBlockNumber()
-//signer
+// const blockno = await provider.getBlockNumber()
+// //signer
 
-const signer = provider.getSigner();
-GetOutAmount
-console.log("signer", signer);
-// contract instance
-
-
-
-const contract = new ethers.Contract(contract_address, abi, signer);
-
-console.log("contract", contract);
-
-// console.log("asadsasf",contract.queryNoSplit());
+// const signer = provider.getSigner();
+// GetOutAmount
+// console.log("signer", signer);
+// // contract instance
 
 
-try {
-  // const tx = await contract.queryNoSplit(  blockno    );
+
+// const contract = new ethers.Contract(contract_address, abi, signer);
+
+// console.log("contract", contract);
+
+// // console.log("asadsasf",contract.queryNoSplit());
+
+
+// try {
+//   // const tx = await contract.queryNoSplit(  blockno    );
     
-    const val = ethers.utils.parseEther(amountIn)
-  const tx = await contract.queryAdapter(  val, tokenIn, tokenOut, 1    );
+//     const val = ethers.utils.parseEther(amountIn)
+//   const tx = await contract.queryAdapter(  val, tokenIn, tokenOut, 1    );
     
     
     
-      console.log("tx", tx);
-      return tx[0].toString();
+//       console.log("tx", tx);
+//       return tx[0].toString();
 
 
       
-} catch (error) {
-  console.log("erior",error);
-}
-};
+// } catch (error) {
+//   console.log("erior",error);
+// }
+// };
 
 export const Swap = async () => {
 
@@ -368,3 +368,76 @@ try {
   console.log("erior",error);
 }
 };
+
+
+
+export const getOutAmount = async (
+  amountIn,
+  tokenIn,
+  tokenOut,
+  optionalArray = []
+) => {
+  console.log("Getting out amount");
+  console.log("amountIn:", amountIn);
+  console.log("tokenIn:", tokenIn);
+  console.log("tokenOut:", tokenOut);
+
+  // Initialize the provider
+  let provider;
+  try {
+    if (window.ethereum) {
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+    } else {
+      provider = new ethers.providers.JsonRpcProvider(
+        "https://andromeda.metis.io/?owner=1088"
+      );
+    }
+
+    const network = await provider.getNetwork();
+    console.log("Connected to network:", network);
+
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(contract_address, abi, signer);
+    console.log("Available functions in contract:", contract.functions);
+    console.log("Contract ABI:", abi);
+    console.log("Contract Address:", contract_address);
+
+    // Convert input amount to Wei
+    const amountInWei = ethers.utils.parseEther(amountIn.toString());
+    let queryResult;
+
+    // Call the contract method based on optionalArray
+    if (optionalArray.length > 0) {
+      queryResult = await contract[
+        "queryNoSplit(uint256,address,address,uint8[])"
+      ](amountInWei, tokenIn, tokenOut, optionalArray);
+    } else {
+      queryResult = await contract["queryNoSplit(uint256,address,address)"](
+        amountInWei,
+        tokenIn,
+        tokenOut
+      );
+    }
+
+    const amountOut = queryResult.amountOut;
+    console.log("Amount Out:", amountOut.toString());
+    return amountOut.toString();
+  } catch (error) {
+    if (error.code === "UNSUPPORTED_OPERATION") {
+      console.error(
+        "Unsupported operation. Please check your network settings."
+      );
+    } else if (error.code === "NETWORK_ERROR") {
+      console.error(
+        "Network error. Please ensure you're connected to the Metis Network."
+      );
+    } else if (error.code === "CALL_EXCEPTION") {
+      console.error(
+        "Call exception: The contract method call failed. Please check the method parameters."
+      );
+    } else {
+      console.error("An unexpected error occurred:", error.message);
+    }
+  }
+};
+

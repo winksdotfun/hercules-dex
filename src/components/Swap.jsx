@@ -9,16 +9,18 @@ import { Options } from "../constant/index"; // Ensure Options contains token da
 import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
-import { GetApproval, GetOutAmount } from "../integration";
+import { GetApproval, getOutAmount, ApproveToken} from "../integration";
 
 
 const Swap = () => {
+  const [amountOut, setAmountOut] = useState(null);
  const [isDropdownOpenFrom, setIsDropdownOpenFrom] = useState(false);
  const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
  const [isMaxHovered, setIsMaxHovered] = useState(false);
  const [showTransactionSwap, setShowTransactionSwap] = useState(false); // State for TransactionSwap visibility
  const [inputBal, setInputBal] = useState(0.0)
  const [needApproval, setneedApproval] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false);
  const [selectedOptionFrom, setSelectedOptionFrom] = useState({
    name: "m.USDC",
    image: musdc,
@@ -79,7 +81,23 @@ const getBalances = async () => {
    if (isConnected && walletAddress) {
      getBalances();
    }
- }, [isConnected, walletAddress, selectedOptionFrom, selectedOptionTo]);
+   const fetchOutAmount = async () => {
+     const amountIn = "1236876826492874920000000000000"; // Replace with your input value
+     const tokenIn = "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21"; // Replace with actual token address
+     const tokenOut = "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21"; // Replace with actual token address
+     const optionalArray = []; // Pass an array if needed
+
+     const amountOut = await getOutAmount(
+       amountIn,
+       tokenIn,
+       tokenOut,
+       optionalArray
+     );
+     console.log("Fetched Amount Out:", amountOut);
+   };
+
+   fetchOutAmount();
+ }, [isConnected, walletAddress, selectedOptionFrom, selectedOptionTo,]);
 
  const checkNetwork = async () => {
    const provider =
@@ -186,7 +204,9 @@ const getBalances = async () => {
 
    setInputValue(validValue);
 
-   handleApproval()
+   if (selectedOptionFrom.name !== "METIS") {
+     handleApproval();
+   }
    handleGetOut(validValue)
    
  };
@@ -216,6 +236,29 @@ const getBalances = async () => {
  const handleCloseTransactionSwap = () => {
    setShowTransactionSwap(false);
  };
+
+ const handleApproveToken = async () => {
+   setIsProcessing(true); // Set processing state to true
+   try {
+     const tx = await ApproveToken(selectedOptionFrom.address);
+     await tx.wait(); // Wait for the transaction to be mined
+     console.log("Transaction completed:", tx);
+     setneedApproval(false); // Approval was successful
+   } catch (error) {
+     console.error("Error during token approval:", error);
+
+     // If the error indicates the transaction was canceled by the user
+     if (
+       error.code === 4001 ||
+       error.message.includes("User denied transaction")
+     ) {
+       setneedApproval(true);
+     }
+   } finally {
+     setIsProcessing(false); // Set processing state back to false
+   }
+ };
+
  const isInsufficientBalance = parseFloat(inputValue) > parseFloat(inputBal);
  
   return (
@@ -362,7 +405,7 @@ const getBalances = async () => {
                 type="number"
                 placeholder="0.0"
                 value={ouputvalue}
-                className="text-white bg-inputBg text-xs px-2 sm:text-2xl font-semibold p-1 sm:p-2 w-full focus:outline-none rounded-xl placeholder:text-sm sm:placeholder:text-2xl"
+                className="text-[#696a6b] bg-inputBg text-xs px-2 sm:text-2xl font-semibold p-1 sm:p-2 w-full focus:outline-none rounded-xl placeholder:text-sm sm:placeholder:text-2xl"
                 style={{ WebkitAppearance: "none", MozAppearance: "textfield" }}
                 disabled
               />
@@ -386,7 +429,7 @@ const getBalances = async () => {
 
         <div className="flex flex-col gap-4 mt-5">
           {!isConnected && (
-            <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-3 rounded-xl font-semibold text-lg mt-1">
+            <button className="text-[#696a6b] font-two bg-notConnectedBg w-full py-1 sm:p-3 rounded-xl font-semibold text-sm sm:text-lg mt-1">
               Not Connected
             </button>
           )}
@@ -397,11 +440,22 @@ const getBalances = async () => {
                   onMouseDown={() => setIsMaxHovered(true)}
                   onMouseUp={() => setIsMaxHovered(false)}
                   onMouseLeave={() => setIsMaxHovered(false)}
-                  className={`text-black bg-custom-gradient ${
+                  onClick={handleApproveToken}
+                  disabled={isProcessing}
+                  className={`text-black font-two cursor-pointer rounded-full p-1 sm:p-2 text-sm sm:text-lg font-semibold text-center items-center ${
+                    isProcessing ? "bg-notConnectedBg" : "bg-custom-gradient"
+                  }  ${isProcessing ? "text-white" : "text-black"} ${
                     isMaxHovered ? "text-white" : "text-black"
-                  } font-two cursor-pointer bg-notConnectedBg rounded-full p-2 text-lg font-semibold text-center items-center`}
+                  }`}
                 >
-                  Approval Required
+                  {isProcessing ? (
+                    <div className="flex items-center justify-center gap-2 text-[#696a6b] ">
+                      <div role="status" class="spinner-border"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    `Approve ${selectedOptionFrom.name}`
+                  )}
                 </button>
               ) : (
                 <button
@@ -410,14 +464,14 @@ const getBalances = async () => {
                   onMouseLeave={() => setIsMaxHovered(false)}
                   className={`text-black bg-custom-gradient ${
                     isMaxHovered ? "text-white" : "text-black"
-                  } font-two cursor-pointer bg-notConnectedBg rounded-full p-2 text-lg font-semibold text-center items-center`}
+                  } font-two cursor-pointer bg-notConnectedBg rounded-full p-1 sm:p-2 text-sm sm:text-lg font-semibold text-center items-center`}
                   onClick={() => setShowTransactionSwap(true)}
                 >
                   Swap
                 </button>
               )
             ) : (
-              <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-3 rounded-xl font-semibold text-lg mt-1">
+              <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-1 sm:p-2 text-sm sm:text-lg font-semibold mt-1">
                 Swap
               </button>
             ))}
