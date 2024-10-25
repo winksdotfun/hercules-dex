@@ -35,7 +35,7 @@ function App() {
           modalSize={modalSize} // Apply the responsive modal size
           theme={darkTheme()}
         >
-          <div className="h-screen font-custom flex justify-center items-center m-2 ">
+          <div className="h-screen font-custom flex justify-center items-center p-2 ">
             <Swap />
             {/* <TransactionSwap/> */}
             {/* <TranscationCompleted/> */}

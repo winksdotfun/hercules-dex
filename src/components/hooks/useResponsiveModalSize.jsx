@@ -5,9 +5,9 @@ const useResponsiveModalSize = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      // Check if the screen width is smaller than 640px (Tailwind's sm breakpoint)
+      // Set modal size to 'auto' if width is less than 450px, otherwise 'compact'
       if (window.innerWidth < 450) {
-        setModalSize("auto"); // Use 'auto' or smaller size for smaller screens
+        setModalSize("auto");
       } else {
         setModalSize("compact");
       }

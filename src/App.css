@@ -188,3 +188,14 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* App.css or a global CSS file */
+@media (max-width: 450px) {
+  .rainbowkit-modal {
+    max-width: 350px !important;
+    /* Enforce the max width */
+    width: 90% !important;
+    /* Make it responsive to screen size */
+  }
+}
