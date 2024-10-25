@@ -5,7 +5,11 @@ import Token from "./components/Token";
 import TransactionSwap from "./components/TransactionSwap";
 import TranscationCompleted from "./components/TranscationCompleted";
 import "@rainbow-me/rainbowkit/styles.css";
-import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import {
+  getDefaultConfig,
+  RainbowKitProvider,
+  darkTheme,
+} from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { metis } from "wagmi/chains"; 
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
@@ -23,7 +27,11 @@ function App() {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider chains={[metis]} modalSize="compact">
+        <RainbowKitProvider
+          chains={[metis]}
+          modalSize="compact"
+          theme={darkTheme()}
+        >
           <div className="h-screen font-custom flex justify-center items-center m-2 ">
             <Swap />
             {/* <TransactionSwap/> */}
