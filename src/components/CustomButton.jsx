@@ -24,8 +24,52 @@ const CustomButton = ({ setConnectionType, setIsConnected }) => {
 const handleConnectMetaMask = async () => {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+  // Define Metis chain ID and network details
+  const METIS_CHAIN_ID = "0x440"; // Hexadecimal representation of Metis (1088)
+  const METIS_NETWORK_PARAMS = {
+    chainId: METIS_CHAIN_ID,
+    chainName: "Metis Andromeda",
+    nativeCurrency: {
+      name: "Metis",
+      symbol: "METIS",
+      decimals: 18,
+    },
+    rpcUrls: ["https://andromeda.metis.io/?owner=1088"],
+    blockExplorerUrls: ["https://andromeda-explorer.metis.io/"],
+  };
+
   if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
     try {
+      // Check if the current network is Metis
+      const currentChainId = await window.ethereum.request({
+        method: "eth_chainId",
+      });
+      if (currentChainId !== METIS_CHAIN_ID) {
+        // Attempt to switch to the Metis chain
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: METIS_CHAIN_ID }],
+          });
+        } catch (switchError) {
+          // If the chain is not added to MetaMask, request to add it
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [METIS_NETWORK_PARAMS],
+              });
+            } catch (addError) {
+              console.error("Failed to add Metis network:", addError);
+              return;
+            }
+          } else {
+            console.error("Failed to switch to Metis network:", switchError);
+            return;
+          }
+        }
+      }
+
       // If on mobile, suggest opening the MetaMask app
       const accounts = await window.ethereum.request({
         method: "eth_accounts",
@@ -40,7 +84,7 @@ const handleConnectMetaMask = async () => {
       } else {
         // Request account access if not already connected
         await window.ethereum.request({ method: "eth_requestAccounts" });
-        console.log("MetaMask is connected");
+        console.log("MetaMask is connected to Metis");
         onClose(); // Close the modal
       }
     } catch (error) {
@@ -61,6 +105,7 @@ const handleConnectMetaMask = async () => {
     }
   }
 };
+
 
 
 
