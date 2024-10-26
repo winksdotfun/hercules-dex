@@ -19,21 +19,42 @@ const CustomButton = ({ setConnectionType, setIsConnected }) => {
     }
   }, [account.isConnected]);
 
+
+
  const handleConnectMetaMask = async () => {
+   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
    if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
      try {
-       await window.ethereum.request({ method: "eth_requestAccounts" });
-       console.log("MetaMask is connected");
-       onClose(); // Close the modal
+       // If on a mobile device, recommend opening the MetaMask app
+       if (isMobile && !window.ethereum.isConnected()) {
+         window.open(
+           "https://metamask.app.link/dapp/hercules-wink.vercel.app",
+           "_blank"
+         );
+       } else {
+         await window.ethereum.request({ method: "eth_requestAccounts" });
+         console.log("MetaMask is connected");
+         onClose(); // Close the modal
+       }
      } catch (error) {
        console.error("Error connecting to MetaMask:", error);
      }
    } else {
-     alert(
-       "MetaMask is not installed. Please install MetaMask to use this feature."
-     );
+     if (isMobile) {
+       // Redirect to MetaMask app download or direct users to open the MetaMask app browser
+       window.open(
+         "https://metamask.app.link/dapp/hercules-wink.vercel.app",
+         "_blank"
+       );
+     } else {
+       alert(
+         "MetaMask is not installed. Please install MetaMask to use this feature."
+       );
+     }
    }
  };
+
 
 
 
