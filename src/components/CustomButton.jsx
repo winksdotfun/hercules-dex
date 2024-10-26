@@ -19,21 +19,23 @@ const CustomButton = ({ setConnectionType, setIsConnected }) => {
     }
   }, [account.isConnected]);
 
-  const handleConnectMetaMask = async () => {
-    if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
-      try {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        console.log("MetaMask is connected");
-        onClose(); // Close the modal
-      } catch (error) {
-        console.error("Error connecting to MetaMask:", error);
-      }
-    } else {
-      alert(
-        "MetaMask is not installed. Please install MetaMask to use this feature."
-      );
-    }
-  };
+ const handleConnectMetaMask = async () => {
+   if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
+     try {
+       await window.ethereum.request({ method: "eth_requestAccounts" });
+       console.log("MetaMask is connected");
+       onClose(); // Close the modal
+     } catch (error) {
+       console.error("Error connecting to MetaMask:", error);
+     }
+   } else {
+     alert(
+       "MetaMask is not installed. Please install MetaMask to use this feature."
+     );
+   }
+ };
+
+
 
   return (
     <ConnectButton.Custom>

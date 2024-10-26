@@ -10,7 +10,7 @@ import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
 import { GetApproval, getOutAmount, ApproveToken} from "../integration";
-import { motion } from "framer-motion";
+
 
 const Swap = () => {
   const [amountOut, setAmountOut] = useState(null);
@@ -21,6 +21,7 @@ const Swap = () => {
  const [inputBal, setInputBal] = useState(0.0)
  const [needApproval, setneedApproval] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentNetwork, setCurrentNetwork] = useState("")
  const [selectedOptionFrom, setSelectedOptionFrom] = useState({
    name: "m.USDC",
    image: musdc,
@@ -106,11 +107,18 @@ const getBalances = async () => {
        : ethers.providers.getDefaultProvider();
    console.log("provider", provider);
    const network = await provider.getNetwork();
+   setCurrentNetwork(network.chainId)
    console.log("Connected to network:", network);
  };
 
+ 
+ 
+
  useEffect(() => {
+  
    checkNetwork();
+   
+   
  }, []);
 
  const toggleDropdownFrom = () => {
@@ -259,8 +267,6 @@ const getBalances = async () => {
    }
  };
 
-
- 
  const isInsufficientBalance = parseFloat(inputValue) > parseFloat(inputBal);
  
   return (
@@ -277,7 +283,6 @@ const getBalances = async () => {
             Swap
           </h1>
           <CustomButton />
-         
         </div>
 
         {/* First row */}
@@ -436,7 +441,9 @@ const getBalances = async () => {
               Not Connected
             </button>
           )}
-          {isConnected &&
+
+          {
+            isConnected &&
             (!isInsufficientBalance && inputValue > 0 ? (
               needApproval ? (
                 <button
@@ -477,7 +484,8 @@ const getBalances = async () => {
               <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-1 sm:p-2 text-sm sm:text-lg font-semibold mt-1">
                 Swap
               </button>
-            ))}
+            ))
+          }
         </div>
       </div>
 
