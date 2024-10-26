@@ -10,7 +10,7 @@ import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
 import { GetApproval, getOutAmount, ApproveToken} from "../integration";
-
+import { motion } from "framer-motion";
 
 const Swap = () => {
   const [amountOut, setAmountOut] = useState(null);
@@ -259,6 +259,21 @@ const getBalances = async () => {
    }
  };
 
+
+ const handleConnectMetaMask = async () => {
+    if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        console.log('MetaMask is connected');
+        isConnected(true); // Set the connection status
+        onClose(); // Close the modal
+      } catch (error) {
+        console.error('Error connecting to MetaMask:', error);
+      }
+    } else {
+      alert('MetaMask is not installed. Please install MetaMask to use this feature.');
+    }
+  };
  const isInsufficientBalance = parseFloat(inputValue) > parseFloat(inputBal);
  
   return (
@@ -275,6 +290,17 @@ const getBalances = async () => {
             Swap
           </h1>
           <CustomButton />
+          {!isConnected && (
+            <motion.button
+              onClick={handleConnectMetaMask}
+              type="button"
+              whileTap={{ scale: 0.9 }}
+              className={`bg-custom-gradient text-black
+                       p-1 sm:p-2 items-center text-[10px] h-fit sm:hidden block sm:text-sm font-semibold text-center justify-center rounded-full`}
+            >
+              Connect
+            </motion.button>
+          )}
         </div>
 
         {/* First row */}

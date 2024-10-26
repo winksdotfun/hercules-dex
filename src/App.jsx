@@ -14,6 +14,7 @@ import { WagmiProvider } from "wagmi";
 import { metis } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
+
 const queryClient = new QueryClient();
 
 const config = getDefaultConfig({
@@ -24,16 +25,19 @@ const config = getDefaultConfig({
 });
 
 function App() {
+  
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           chains={[metis]}
-          modalSize="compact"
+          modalSize="compact" // Apply the responsive modal size
           theme={darkTheme()}
-          showRecentTransactions={true}
+          showRecentTransactions={true} // Optional: show recent transactions
+          showWalletInfo={false} // Hides "What is a Wallet?" info
         >
-          <div className="h-screen font-custom flex justify-center items-center p-2">
+          <div className="h-screen font-custom flex justify-center items-center p-2 ">
             <Swap />
             {/* <TransactionSwap/> */}
             {/* <TranscationCompleted/> */}

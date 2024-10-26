@@ -56,7 +56,7 @@ const CustomButton = ({ setConnectionType, setIsConnected }) => {
                       type="button"
                       whileTap={{ scale: 0.9 }}
                       className={`bg-custom-gradient text-black
-                       p-1 sm:p-2 items-center text-[10px] h-fit  sm:text-sm font-semibold text-center justify-center rounded-full`}
+                       p-1 sm:p-2 items-center text-[10px] h-fit hidden sm:block sm:text-sm font-semibold text-center justify-center rounded-full`}
                     >
                       Connect
                     </motion.button>
