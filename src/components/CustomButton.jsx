@@ -16,89 +16,102 @@ const CustomButton = ({ setConnectionType, setIsConnected }) => {
     }
   }, [account.isConnected]);
 
-  const handleConnectMetaMask = async () => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+const handleConnectMetaMask = async () => {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    const METIS_CHAIN_ID = "0x440"; // Hexadecimal representation of Metis (1088)
-    const METIS_NETWORK_PARAMS = {
-      chainId: METIS_CHAIN_ID,
-      chainName: "Metis Andromeda",
-      nativeCurrency: {
-        name: "Metis",
-        symbol: "METIS",
-        decimals: 18,
-      },
-      rpcUrls: ["https://andromeda.metis.io/?owner=1088"],
-      blockExplorerUrls: ["https://andromeda-explorer.metis.io/"],
-    };
+  const METIS_CHAIN_ID = "0x440"; // Hexadecimal representation of Metis (1088)
+  const METIS_NETWORK_PARAMS = {
+    chainId: METIS_CHAIN_ID,
+    chainName: "Metis Andromeda",
+    nativeCurrency: {
+      name: "Metis",
+      symbol: "METIS",
+      decimals: 18,
+    },
+    rpcUrls: ["https://andromeda.metis.io/?owner=1088"],
+    blockExplorerUrls: ["https://andromeda-explorer.metis.io/"],
+  };
 
-    if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
-      try {
-        const currentChainId = await window.ethereum.request({
-          method: "eth_chainId",
-        });
-        if (currentChainId !== METIS_CHAIN_ID) {
-          try {
-            await window.ethereum.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: METIS_CHAIN_ID }],
-            });
-          } catch (switchError) {
-            if (switchError.code === 4902) {
-              try {
-                await window.ethereum.request({
-                  method: "wallet_addEthereumChain",
-                  params: [METIS_NETWORK_PARAMS],
-                });
-              } catch (addError) {
-                console.error("Failed to add Metis network:", addError);
-                return;
-              }
-            } else {
-              console.error("Failed to switch to Metis network:", switchError);
+  if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
+    try {
+      const currentChainId = await window.ethereum.request({
+        method: "eth_chainId",
+      });
+      if (currentChainId !== METIS_CHAIN_ID) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: METIS_CHAIN_ID }],
+          });
+        } catch (switchError) {
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [METIS_NETWORK_PARAMS],
+              });
+            } catch (addError) {
+              console.error("Failed to add Metis network:", addError);
               return;
             }
-          }
-        }
-
-        // If on mobile, suggest opening the MetaMask app
-        if (isMobile) {
-          // Try to connect accounts
-          try {
-            await window.ethereum.request({ method: "eth_requestAccounts" });
-            console.log("MetaMask is connected to Metis");
-          } catch (accountError) {
-            console.error("Error connecting accounts on mobile:", accountError);
-            window.open(
-              "https://metamask.app.link/dapp/hercules-wink.vercel.app",
-              "_blank"
-            );
-            alert("Please open MetaMask and connect to your wallet.");
+          } else {
+            console.error("Failed to switch to Metis network:", switchError);
             return;
           }
-        } else {
-          // Request account access if not already connected
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          console.log("MetaMask is connected to Metis");
         }
-      } catch (error) {
-        console.error("Error connecting to MetaMask:", error);
       }
-    } else {
-      // Suggest installing MetaMask or opening the MetaMask app on mobile
-      if (isMobile) {
-        window.open(
-          "https://metamask.app.link/dapp/hercules-wink.vercel.app",
-          "_blank"
-        );
-        alert("Please open MetaMask and connect to your wallet.");
-      } else {
-        alert(
-          "MetaMask is not installed. Please install MetaMask to use this feature."
-        );
+
+      // Request account access if not already connected
+      try {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const accounts = await window.ethereum.request({
+          method: "eth_accounts",
+        });
+        if (accounts.length === 0) {
+          // If no accounts are found, show alert
+          throw new Error("No accounts found. Please connect to MetaMask.");
+        }
+
+        console.log("MetaMask is connected to Metis");
+
+        if (isMobile) {
+          // Suggest opening the MetaMask app on mobile if needed
+          window.open(
+            "https://metamask.app.link/dapp/hercules-wink.vercel.app",
+            "_blank"
+          );
+        }
+      } catch (accountError) {
+        console.error("Error connecting accounts:", accountError);
+        if (isMobile) {
+          window.open(
+            "https://metamask.app.link/dapp/hercules-wink.vercel.app",
+            "_blank"
+          );
+          alert("Please open MetaMask and connect to your wallet.");
+        } else {
+          alert("Error connecting to MetaMask. Please try again.");
+        }
+        return;
       }
+    } catch (error) {
+      console.error("Error connecting to MetaMask:", error);
     }
-  };
+  } else {
+    // Suggest installing MetaMask or opening the MetaMask app on mobile
+    if (isMobile) {
+      window.open(
+        "https://metamask.app.link/dapp/hercules-wink.vercel.app",
+        "_blank"
+      );
+      alert("Please open MetaMask and connect to your wallet.");
+    } else {
+      alert(
+        "MetaMask is not installed. Please install MetaMask to use this feature."
+      );
+    }
+  }
+};
 
   return (
     <ConnectButton.Custom>
