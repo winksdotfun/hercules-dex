@@ -274,7 +274,7 @@ const getBalances = async () => {
       <img
         src={logo}
         alt=""
-        className="bg-black p-[5px] rounded-md h-[25px] sm:h-[40px] w-[60px] sm:w-[90px] mx-auto  sm:mb-4"
+        className="bg-black p-[5px] rounded-md h-[25px] sm:h-[50px] w-[60px] sm:w-[130px] mx-auto  sm:mb-2"
       />
 
       <div className=" p-3 sm:p-6 rounded-2xl shadow-md w-fit sm:w-[490px] md:w-[500px] bg-primaryBg">
@@ -442,8 +442,7 @@ const getBalances = async () => {
             </button>
           )}
 
-          {
-            isConnected &&
+          {isConnected &&
             (!isInsufficientBalance && inputValue > 0 ? (
               needApproval ? (
                 <button
@@ -484,8 +483,7 @@ const getBalances = async () => {
               <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-1 sm:p-2 text-sm sm:text-lg font-semibold mt-1">
                 Swap
               </button>
-            ))
-          }
+            ))}
         </div>
       </div>
 
@@ -498,6 +496,9 @@ const getBalances = async () => {
           outVal={ouputvalue}
         />
       )}
+      <p className="text-white text-sm sm:text-base font-medium text-center leading-5  sm:pt-2 font-two">
+        Powered by Winks.fun
+      </p>
     </div>
   );
 };
