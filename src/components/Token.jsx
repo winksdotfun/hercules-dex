@@ -3,6 +3,9 @@ import { IoIosClose } from "react-icons/io";
 import { Options, Commonbases } from "../constant/index";
 import { ethers } from "ethers";
 import { useAccount } from "wagmi";
+import axios from "axios"; // Import axios
+
+
 
 const Token = ({ closeDropdown, onSelectToken }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,6 +14,30 @@ const Token = ({ closeDropdown, onSelectToken }) => {
   const filteredOptions = Options.filter((option) =>
     option.head.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const [tokens, setTokens] = useState([]);
+
+
+useEffect(() => {
+  const fetchTokendata = async () => {
+    try {
+      const response = await fetch("https://api.hercules.exchange/v2/tokens");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      setTokens(data);
+      console.log(tokens)
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchTokendata();
+}, []);
+
+
+
+
 
   // Function to get the token balance
   const fetchTokenBalance = async (tokenAddress) => {
@@ -157,6 +184,7 @@ const Token = ({ closeDropdown, onSelectToken }) => {
                         : (isConnected && formatBalance(balances[option.id])) ||
                           "0"}
                     </h1>
+                    
                   </div>
                 ))
             ) : (

@@ -9,11 +9,13 @@ import { Options } from "../constant/index"; // Ensure Options contains token da
 import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
-import { GetApproval, getOutAmount, ApproveToken} from "../integration";
-
+import { GetApproval,GetOutAmount, ApproveToken} from "../integration";
+import { Tokens } from "../constant/index";
+import tokenAbi from "../tokenabi.json";
 
 const Swap = () => {
   const [amountOut, setAmountOut] = useState(null);
+  const [routeerror, setRouteerror] = useState('')
  const [isDropdownOpenFrom, setIsDropdownOpenFrom] = useState(false);
  const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
  const [isMaxHovered, setIsMaxHovered] = useState(false);
@@ -22,6 +24,8 @@ const Swap = () => {
  const [needApproval, setneedApproval] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentNetwork, setCurrentNetwork] = useState("")
+  const [fromUSD,setFromUSD] =useState('')
+  const [toUSD, setToUSD] = useState('')
  const [selectedOptionFrom, setSelectedOptionFrom] = useState({
    name: "m.USDC",
    image: musdc,
@@ -33,7 +37,7 @@ const Swap = () => {
    address: "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
  });
  const [inputValue, setInputValue] = useState("");
- const [ouputvalue, setOutputValue] = useState("0.00000000000001")
+ const [ouputvalue, setOutputValue] = useState("0.0")
  const [fromTokenBalance, setFromTokenBalance] = useState("0.00");
  const [toTokenBalance, setToTokenBalance] = useState("0.00");
  const { address: walletAddress, isConnected } = useAccount();
@@ -78,27 +82,76 @@ const getBalances = async () => {
   setFromTokenBalance(formatBalance(fromBalance));
   setToTokenBalance(formatBalance(toBalance));
 };
- useEffect(() => {
-   if (isConnected && walletAddress) {
-     getBalances();
-   }
-   const fetchOutAmount = async () => {
-     const amountIn = "1236876826492874920000000000000"; // Replace with your input value
-     const tokenIn = "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21"; // Replace with actual token address
-     const tokenOut = "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21"; // Replace with actual token address
-     const optionalArray = []; // Pass an array if needed
+useEffect(() => {
+  if (isConnected && walletAddress) {
+    getBalances();
+  }
 
-     const amountOut = await getOutAmount(
-       amountIn,
-       tokenIn,
-       tokenOut,
-       optionalArray
-     );
-     console.log("Fetched Amount Out:", amountOut);
-   };
+  const fetchOutAmount = async () => {
+    const amountIn = inputValue; // Replace with your input value
+    const tokenIn = selectedOptionFrom.address; // Replace with actual token address
+    const tokenOut = selectedOptionTo.address; // Replace with actual token address
 
-   fetchOutAmount();
- }, [isConnected, walletAddress, selectedOptionFrom, selectedOptionTo,]);
+    console.log("Fetching Amount Out...");
+    console.log("Input Amount:", amountIn);
+    console.log("Token In Address:", tokenIn);
+    console.log("Token Out Address:", tokenOut);
+
+    // Provider
+    const provider = window.ethereum
+      ? new ethers.providers.Web3Provider(window.ethereum)
+      : ethers.providers.getDefaultProvider();
+    console.log("Provider:", provider);
+
+    // Signer
+    const signer = provider.getSigner();
+    console.log("Signer:", signer);
+
+    // Check tokenInDecimals
+    const tokenInCon = new ethers.Contract(tokenIn, tokenAbi, signer);
+    const tokenInDecimals = await tokenInCon.decimals();
+    const inputValueDecimals = (amountIn.split(".")[1] || []).length;
+
+    if (inputValueDecimals > tokenInDecimals) {
+      console.error(
+        "No route found: Input value exceeds token decimal places."
+      );
+      setRouteerror("Error: No route found"); // Update state or handle the error accordingly
+      return; // Exit the function
+    }
+
+    const amountOut = await GetOutAmount(amountIn, tokenIn, tokenOut);
+   setRouteerror('')
+    if (amountOut !== null) {
+      console.log("Fetched Amount Out:", amountOut);
+      setOutputValue(amountOut);
+    } else {
+      console.error("Amount out is null or undefined.");
+    }
+  };
+
+  // Initial fetch
+  fetchOutAmount();
+
+  // Set interval to fetch every 5 seconds
+  const intervalId = setInterval(fetchOutAmount, 5000); // Fetch every 5 seconds
+
+  // Cleanup function to clear the interval on unmount or when dependencies change
+  return () => {
+    clearInterval(intervalId);
+  };
+}, [
+  isConnected,
+  walletAddress,
+  selectedOptionFrom,
+  selectedOptionTo,
+  inputValue,
+]);
+
+
+
+
+
 
  const checkNetwork = async () => {
    const provider =
@@ -269,6 +322,32 @@ const getBalances = async () => {
 
  const isInsufficientBalance = parseFloat(inputValue) > parseFloat(inputBal);
  
+
+ const fetchTokenPrice = (tokenAddress) => {
+   const token = Tokens.find(
+     (t) => t.address.toLowerCase() === tokenAddress.toLowerCase()
+   );
+   return token ? token.price : 0;
+ };
+ const calculateUSD = () => {
+   // Fetch token prices based on their addresses
+   const fromTokenPrice = fetchTokenPrice(selectedOptionFrom.address);
+   const toTokenPrice = fetchTokenPrice(selectedOptionTo.address);
+  console.log(fromTokenPrice, toTokenPrice);
+   // Calculate the USD values
+  const fromUSDValue = isNaN(inputValue) ? 0 : inputValue * fromTokenPrice;
+  const toUSDValue = isNaN(ouputvalue) ? 0 : ouputvalue * toTokenPrice;
+
+   // Set the USD values with two decimal points
+   setFromUSD(fromUSDValue.toFixed(2));
+   console.log(fromUSD)
+   setToUSD(toUSDValue.toFixed(2));
+ };
+ useEffect(() => {
+   calculateUSD(); // Recalculate USD values when the selected options change
+ }, [selectedOptionFrom, selectedOptionTo, inputValue, ouputvalue]);
+
+
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-black relative">
       <img
@@ -328,8 +407,13 @@ const getBalances = async () => {
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
               />
-              <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
-                Balance:{isConnected ? fromTokenBalance : "0.0"}
+              <div className="flex justify-between">
+                <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
+                  Balance:{isConnected ? fromTokenBalance : "0.0"}
+                </div>
+                <div className="sm:text-xs text-[10px] text-white text-start font-medium  px-1  sm:px-2">
+                  $
+                </div>
               </div>
             </div>
 
@@ -417,8 +501,14 @@ const getBalances = async () => {
                 style={{ WebkitAppearance: "none", MozAppearance: "textfield" }}
                 disabled
               />
-              <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
-                Balance: {isConnected ? toTokenBalance : "0.0"}
+              <div className="flex justify-between">
+                {" "}
+                <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
+                  Balance: {isConnected ? toTokenBalance : "0.0"}
+                </div>
+                <div className="sm:text-xs text-[10px] text-white text-start font-medium  px-1 mr-10 sm:px-2">
+                  $
+                </div>
               </div>
             </div>
           </div>
@@ -432,6 +522,17 @@ const getBalances = async () => {
             className="alert mt-3 mb-0 bg-[#ff353519] bg-opacity-50 text-[#ff3535] border-none font-normal px-6 text-[13px] text-left p-2 rounded-full"
           >
             Error: Insufficient Balance
+          </div>
+        )}
+
+        {routeerror && isConnected && (
+          <div
+            role="alert"
+            aria-live="polite"
+            aria-atomic="true"
+            className="alert mt-3 mb-0 bg-[#ff353519] bg-opacity-50 text-[#ff3535] border-none font-normal px-6 text-[13px] text-left p-2 rounded-full"
+          >
+            {routeerror}
           </div>
         )}
 
@@ -453,20 +554,20 @@ const getBalances = async () => {
                   disabled={isProcessing}
                   className={`text-black font-two cursor-pointer rounded-full p-1 sm:p-2 text-sm sm:text-lg font-semibold text-center items-center ${
                     isProcessing ? "bg-notConnectedBg" : "bg-custom-gradient"
-                  }  ${isProcessing ? "text-white" : "text-black"} ${
+                  } ${isProcessing ? "text-white" : "text-black"} ${
                     isMaxHovered ? "text-white" : "text-black"
                   }`}
                 >
                   {isProcessing ? (
-                    <div className="flex items-center justify-center gap-2 text-[#696a6b] ">
-                      <div role="status" class="spinner-border"></div>
+                    <div className="flex items-center justify-center gap-2 text-[#696a6b]">
+                      <div role="status" className="spinner-border"></div>
                       Processing...
                     </div>
                   ) : (
                     `Approve ${selectedOptionFrom.name}`
                   )}
                 </button>
-              ) : (
+              ) : !routeerror ? (
                 <button
                   onMouseDown={() => setIsMaxHovered(true)}
                   onMouseUp={() => setIsMaxHovered(false)}
@@ -476,6 +577,10 @@ const getBalances = async () => {
                   } font-two cursor-pointer bg-notConnectedBg rounded-full p-1 sm:p-2 text-sm sm:text-lg font-semibold text-center items-center`}
                   onClick={() => setShowTransactionSwap(true)}
                 >
+                  Swap
+                </button>
+              ) : (
+                <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-1 sm:p-2 text-sm sm:text-lg font-semibold mt-1">
                   Swap
                 </button>
               )

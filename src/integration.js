@@ -273,169 +273,213 @@ try {
 };
 
 
-// export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
 
-//   console.log("getting out");
-  
-
-//   console.log("ammount",amountIn);
-//   console.log("tokenIn",tokenIn);
-//   console.log("tokenOut",tokenOut);
-  
-// // provider
-// const provider =
-//   window.ethereum != null
-//     ? new ethers.providers.Web3Provider(window.ethereum)
-//     : ethers.providers.getDefaultProvider();
-// console.log("provider", provider);
-
-// const blockno = await provider.getBlockNumber()
-// //signer
-
-// const signer = provider.getSigner();
-// GetOutAmount
-// console.log("signer", signer);
-// // contract instance
+ 
+ 
 
 
 
-// const contract = new ethers.Contract(contract_address, abi, signer);
-
-// console.log("contract", contract);
-
-// // console.log("asadsasf",contract.queryNoSplit());
 
 
-// try {
-//   // const tx = await contract.queryNoSplit(  blockno    );
-    
-//     const val = ethers.utils.parseEther(amountIn)
-//   const tx = await contract.queryAdapter(  val, tokenIn, tokenOut, 1    );
-    
-    
-    
-//       console.log("tx", tx);
-//       return tx[0].toString();
+export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
+  // console.log("Getting output amount");
+  // console.log("Input Amount:", amountIn);
+  // console.log("Token In Address:", tokenIn);
+  // console.log("Token Out Address:", tokenOut);
 
-
-      
-// } catch (error) {
-//   console.log("erior",error);
-// }
-// };
-
-export const Swap = async () => {
-
-  console.log("getting swap");
-  
-
-  
-// provider
-const provider =
-  window.ethereum != null
+  // Provider
+  const provider = window.ethereum
     ? new ethers.providers.Web3Provider(window.ethereum)
     : ethers.providers.getDefaultProvider();
-console.log("provider", provider);
+  console.log("Provider:", provider);
 
-const blockno = await provider.getBlockNumber()
-//signer
+  // Signer
+  const signer = provider.getSigner();
+  console.log("Signer:", signer);
 
-const signer = provider.getSigner();
-GetOutAmount
-console.log("signer", signer);
-// contract instance
+  // Contract instance
+  const contract = new ethers.Contract(
+    "0xF9a6d89DCCb139E26da4b9DF00796C980b5975d2",
+    abi,
+    signer
+  );
+  console.log("Contract:", contract);
 
-const contract = new ethers.Contract(contract_address, abi, signer);
+  const tokenInCon = new ethers.Contract(tokenIn, tokenAbi, signer);
+  const tokenOutCon = new ethers.Contract(tokenOut, tokenAbi, signer);
 
-console.log("contract", contract);
-
-// console.log("asadsasf",contract.queryNoSplit());
-
-
-try {
-  // const tx = await contract.queryNoSplit(  blockno    );
-    
-  const tx = await contract.swapNoSplitToETH(  [100,2302329397750,["0xEA32A96608495e54156Ae48931A7c20f0dcc1a21","0x75cb093E4D61d2A2e65D8e0BBb01DE8d89b53481"],["0xfccb98649Cb44B9729e04ef1Adb41359d3f4699a",],["0xEf874FeDe49CF49940E8C472f3e58E75ea65b34c",]],"0","0x2B258418ee8ba6822472F722bC558Ce62D42280D"  );
-    
-    
-    
-      console.log("tx", tx);
-      return tx
-
-
-      
-} catch (error) {
-  console.log("erior",error);
-}
-};
-
-
-
-export const getOutAmount = async (
-  amountIn,
-  tokenIn,
-  tokenOut,
-  optionalArray = []
-) => {
-  console.log("Getting out amount");
-  console.log("amountIn:", amountIn);
-  console.log("tokenIn:", tokenIn);
-  console.log("tokenOut:", tokenOut);
-
-  // Initialize the provider
-  let provider;
   try {
-    if (window.ethereum) {
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-    } else {
-      provider = new ethers.providers.JsonRpcProvider(
-        "https://andromeda.metis.io/?owner=1088"
-      );
+    const tokenInDecimals = await tokenInCon.decimals();
+    const tokenOutDecimals = await tokenOutCon.decimals();
+
+    //console.log("Token In Decimals:", tokenInDecimals.toString());
+    //console.log("Token Out Decimals:", tokenOutDecimals.toString());
+
+    // Convert the amountIn to the appropriate unit
+    const val = ethers.utils.parseUnits(amountIn.toString(), tokenInDecimals);
+    //console.log("Parsed Input Value:", val.toString());
+
+    const trustedTokens = ["0x0000000000000000000000000000000000000000"];
+    const maxSteps = 2;
+
+    // Call the smart contract function to find the best path
+    const tx = await contract.findBestPath(
+      val,
+      tokenIn,
+      tokenOut,
+      trustedTokens,
+      maxSteps
+    );
+
+    // Log the entire transaction result to debug
+   // console.log("Transaction Result:", tx);
+
+    // Check if amounts are present in the transaction result
+    if (!tx.amounts || tx.amounts.length === 0) {
+      throw new Error("No amounts returned from transaction.");
     }
 
-    const network = await provider.getNetwork();
-    console.log("Connected to network:", network);
+    // Convert the final output amount to a readable format
+    const outputAmountRaw = tx.amounts[tx.amounts.length - 1];
+    //console.log("Raw Output Amount:", outputAmountRaw.toString());
 
-    const signer = provider.getSigner();
-    const contract = new ethers.Contract(contract_address, abi, signer);
-    
+    // Use formatUnits for output amount with the correct decimals
+    const outputAmountFormatted = ethers.utils.formatUnits(
+      outputAmountRaw,
+      tokenOutDecimals
+    );
+    //console.log("Formatted Output Amount:", outputAmountFormatted);
 
-    // Convert input amount to Wei
-    const amountInWei = ethers.utils.parseEther(amountIn.toString());
-    let queryResult;
+    // Round and format the output amount to the correct number of decimal places
+    const outputAmountRounded = parseFloat(outputAmountFormatted).toFixed(
+      tokenOutDecimals
+    );
+    //console.log("Rounded Output Amount:", outputAmountRounded);
 
-    // Call the contract method based on optionalArray
-    if (optionalArray.length > 0) {
-      queryResult = await contract[
-        "queryNoSplit(uint256,address,address,uint8[])"
-      ](amountInWei, tokenIn, tokenOut, optionalArray);
-    } else {
-      queryResult = await contract["queryNoSplit(uint256,address,address)"](
-        amountInWei,
-        tokenIn,
-        tokenOut
-      );
-    }
-
-    const amountOut = queryResult.amountOut;
-    console.log("Amount Out:", amountOut.toString());
-    return amountOut.toString();
+    return outputAmountRounded; // Return rounded output amount
   } catch (error) {
-    if (error.code === "UNSUPPORTED_OPERATION") {
-      console.error(
-        "Unsupported operation. Please check your network settings."
-      );
-    } else if (error.code === "NETWORK_ERROR") {
-      console.error(
-        "Network error. Please ensure you're connected to the Metis Network."
-      );
-    } else if (error.code === "CALL_EXCEPTION") {
-      console.error(
-        "Call exception: The contract method call failed. Please check the method parameters."
-      );
-    } else {
-      console.error("An unexpected error occurred:", error.message);
-    }
+    console.error("Error:", error);
+    return null;
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+export const Swap = async (amountin, tokenin, tokenout, to) => {
+  if (!amountin || !tokenin || !tokenout || !to) {
+    console.error("Invalid swap parameters provided.");
+    return;
+  }
+
+  console.log("Initializing swap...");
+  console.log("Amount In:", amountin);
+  console.log("From Token Address:", tokenin);
+  console.log("To Token Address:", tokenout);
+  console.log("Recipient Address:", to);
+
+  const provider = window.ethereum
+    ? new ethers.providers.Web3Provider(window.ethereum)
+    : ethers.providers.getDefaultProvider();
+  const signer = provider.getSigner();
+  const contract = new ethers.Contract(contract_address, abi, signer);
+
+  try {
+    // Fetching all trade parameters
+    const amountIn = ethers.utils.parseUnits(amountin.toString(), 18); // Adjust decimals if needed
+    const trustedTokens = ["0x0000000000000000000000000000000000000000"]; // No specific trusted tokens
+    const maxSteps = 2; // Maximum number of hops allowed
+
+    // Call the smart contract to find the best path for the swap
+    const result = await contract.findBestPath(
+      amountIn,
+      tokenin,
+      tokenout,
+      trustedTokens,
+      maxSteps
+    );
+
+    // Extract trade parameters from the result
+    const amounts = result.amounts;
+    const adapters = result.adapters;
+    const path = [
+      "0x420000000000000000000000000000000000000A",
+      tokenin,
+      tokenout,
+    ];
+    const recipients = result.recipients;
+
+    console.log(result);
+
+    // Validate trade parameters
+    if (
+      !amounts ||
+      !Array.isArray(amounts) ||
+      amounts.length === 0 ||
+      !adapters ||
+      !Array.isArray(adapters) ||
+      !path ||
+      !Array.isArray(path) ||
+      !recipients ||
+      !Array.isArray(recipients)
+    ) {
+      console.error("Invalid trade parameters received:", result);
+      return;
+    }
+
+    const amountOut = amounts[amounts.length - 1]; // Final output amount
+
+    // Ensure the path starts with WETH
+    
+ 
+    // Proceed with the swap logic
+    if (
+      tokenin !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000" &&
+      tokenout !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
+    ) {
+      const tx = await contract.swapNoSplit(
+        { amountIn, amountOut, path, adapters, recipients },
+        0,
+        to
+      );
+      await tx.wait();
+      console.log("Transaction successful:", tx);
+      return tx;
+    } else if (tokenin === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
+      const tx = await contract.swapNoSplitFromETH(
+        { amountIn, amountOut, path, adapters, recipients },
+        0,
+        to,
+        { value: amountIn }
+      );
+      await tx.wait();
+      console.log("Transaction successful:", tx);
+      return tx;
+    } else if (tokenout === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
+      const tx = await contract.swapNoSplitToETH(
+        { amountIn, amountOut, path, adapters, recipients },
+        0,
+        to
+      );
+      await tx.wait();
+      console.log("Transaction successful:", tx);
+      return tx;
+    }
+  } catch (error) {
+    console.error("Error executing swap:", error);
+  }
+};
+
+
+
+
+
+
 
