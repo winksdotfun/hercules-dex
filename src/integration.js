@@ -17,9 +17,31 @@ if (ethereum) {
 
 const contract_address = "0xF9a6d89DCCb139E26da4b9DF00796C980b5975d2";
 
-export const Bridge = async (amount, destinationNetwork, destinationAddress, amountinWei, tokenAddress, forceUpdate, permitData) => {
-
-    console.log("amount",amount,"destinationNetwork", destinationNetwork,"destinationAddress", destinationAddress, "amountinWei",amountinWei, "tokenAddress",tokenAddress, "forceUpdate",forceUpdate, "permitData",permitData);
+export const Bridge = async (
+  amount,
+  destinationNetwork,
+  destinationAddress,
+  amountinWei,
+  tokenAddress,
+  forceUpdate,
+  permitData
+) => {
+  console.log(
+    "amount",
+    amount,
+    "destinationNetwork",
+    destinationNetwork,
+    "destinationAddress",
+    destinationAddress,
+    "amountinWei",
+    amountinWei,
+    "tokenAddress",
+    tokenAddress,
+    "forceUpdate",
+    forceUpdate,
+    "permitData",
+    permitData
+  );
   // provider
   const provider =
     window.ethereum != null
@@ -38,38 +60,48 @@ export const Bridge = async (amount, destinationNetwork, destinationAddress, amo
 
   console.log("contract", contract);
 
- try {
-  if(tokenAddress === "0x0000000000000000000000000000000000000000"){
-    const tx = await contract.bridgeAsset(
-      destinationNetwork, destinationAddress, amountinWei, tokenAddress, forceUpdate, permitData,{
-          value:amountinWei,
-          gasLimit: 300000         }
-        );
-      
-        await tx.wait();
-      
-        console.log("tx", tx);
-        return tx;
-  }
-else{
-  const tx = await contract.bridgeAsset(
-    destinationNetwork, destinationAddress, amountinWei, tokenAddress, forceUpdate, permitData,{
-     
-        gasLimit: 300000         }
+  try {
+    if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+      const tx = await contract.bridgeAsset(
+        destinationNetwork,
+        destinationAddress,
+        amountinWei,
+        tokenAddress,
+        forceUpdate,
+        permitData,
+        {
+          value: amountinWei,
+          gasLimit: 300000,
+        }
       );
-    
+
       await tx.wait();
-    
+
       console.log("tx", tx);
       return tx;
-}
-        
- } catch (error) {
-    console.log("erior",error);
- }
-};
-export const ApproveToken = async ( tokenAddress) => {
+    } else {
+      const tx = await contract.bridgeAsset(
+        destinationNetwork,
+        destinationAddress,
+        amountinWei,
+        tokenAddress,
+        forceUpdate,
+        permitData,
+        {
+          gasLimit: 300000,
+        }
+      );
 
+      await tx.wait();
+
+      console.log("tx", tx);
+      return tx;
+    }
+  } catch (error) {
+    console.log("erior", error);
+  }
+};
+export const ApproveToken = async (tokenAddress) => {
   // provider
   const provider =
     window.ethereum != null
@@ -88,28 +120,25 @@ export const ApproveToken = async ( tokenAddress) => {
 
   console.log("contract", contract);
 
- try {
-  if(tokenAddress === "0x0000000000000000000000000000000000000000"){
-    return
-  }
-else{
-  const tx = await contract.approve(
-     
-contract_address, "115792089237316195423570985008687907853269984665640564039457574004913129639935"
+  try {
+    if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+      return;
+    } else {
+      const tx = await contract.approve(
+        contract_address,
+        "115792089237316195423570985008687907853269984665640564039457574004913129639935"
       );
-    
+
       await tx.wait();
-    
+
       console.log("tx", tx);
       return tx;
-}
-        
- } catch (error) {
-    console.log("erior",error);
- }
+    }
+  } catch (error) {
+    console.log("erior", error);
+  }
 };
 export const GetGas = async () => {
-
   // provider
   const provider =
     window.ethereum != null
@@ -128,158 +157,133 @@ export const GetGas = async () => {
 
   console.log("contract", contract);
 
- try {
-  const gasPrice = await provider.getGasPrice();
-  console.log("Gas price (in wei):", gasPrice.toString());
+  try {
+    const gasPrice = await provider.getGasPrice();
+    console.log("Gas price (in wei):", gasPrice.toString());
 
-  // Define gas limit
-  const gasLimit = 250000;
+    // Define gas limit
+    const gasLimit = 250000;
 
-  // Calculate network fee
-  const networkFee = gasPrice.mul(gasLimit);  // gasPrice * gasLimit
-  console.log("Estimated network fee (in wei):", networkFee.toString());
+    // Calculate network fee
+    const networkFee = gasPrice.mul(gasLimit); // gasPrice * gasLimit
+    console.log("Estimated network fee (in wei):", networkFee.toString());
 
-          return ethers.utils.formatEther(networkFee);
-
-        
- } catch (error) {
-    console.log("erior",error);
- }
+    return ethers.utils.formatEther(networkFee);
+  } catch (error) {
+    console.log("erior", error);
+  }
 };
-export const GetBalance = async (address, tokenAddress,eth) => {
-
-  console.log("Addres",address,"tokenAddress",tokenAddress, "eth",eth)
+export const GetBalance = async (address, tokenAddress, eth) => {
+  console.log("Addres", address, "tokenAddress", tokenAddress, "eth", eth);
   // provider
-  if(eth){
+  if (eth) {
     const provider =
-    window.ethereum != null
-      ? new ethers.providers.Web3Provider(window.ethereum)
-      : ethers.providers.getDefaultProvider();
-  console.log("provider", provider);
+      window.ethereum != null
+        ? new ethers.providers.Web3Provider(window.ethereum)
+        : ethers.providers.getDefaultProvider();
+    console.log("provider", provider);
 
-  //signer
+    //signer
 
-  const signer = provider.getSigner();
+    const signer = provider.getSigner();
 
-  console.log("signer", signer);
-  // contract instance
+    console.log("signer", signer);
+    // contract instance
 
-  const contract = new ethers.Contract(tokenAddress, tokenAbi, signer);
+    const contract = new ethers.Contract(tokenAddress, tokenAbi, signer);
 
-  console.log("contract", contract);
+    console.log("contract", contract);
 
-try {
-  const balance = await contract.balanceOf(address);
+    try {
+      const balance = await contract.balanceOf(address);
 
-  console.log("balance in integration:",balance)
+      console.log("balance in integration:", balance);
 
-  return balance.toString();
-} catch (error) {
-  console.log("error in error",error);
-  
-}
-
-  }
-  else{
+      return balance.toString();
+    } catch (error) {
+      console.log("error in error", error);
+    }
+  } else {
     const provider =
-    window.ethereum != null
-      ? new ethers.providers.Web3Provider(window.ethereum)
-      : ethers.providers.getDefaultProvider();
-  console.log("provider", provider);
+      window.ethereum != null
+        ? new ethers.providers.Web3Provider(window.ethereum)
+        : ethers.providers.getDefaultProvider();
+    console.log("provider", provider);
 
-  //signer
+    //signer
 
-  const signer = provider.getSigner();
+    const signer = provider.getSigner();
 
-  console.log("signer", signer);
-  // contract instance
+    console.log("signer", signer);
+    // contract instance
 
-  const contract = new ethers.Contract(tokenAddress, tokenAbi, signer);
+    const contract = new ethers.Contract(tokenAddress, tokenAbi, signer);
 
-  console.log("contract", contract);
-  const balance = await contract.balanceOf(address);
+    console.log("contract", contract);
+    const balance = await contract.balanceOf(address);
 
-  return balance.toString();
-
+    return balance.toString();
   }
-
-
 };
-export const GetApproval = async (address, tokenAddress,eth) => {
-
-  console.log("Addres",address,"tokenAddress",tokenAddress, "eth",eth)
+export const GetApproval = async (address, tokenAddress, eth) => {
+  console.log("Addres", address, "tokenAddress", tokenAddress, "eth", eth);
   // provider
 
   console.log("in approval");
 
-  if(tokenAddress === "0x0000000000000000000000000000000000000000"){
-    return 10000000000
+  if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+    return 10000000000;
   }
-  
-  if(!eth){
+
+  if (!eth) {
     const provider =
-    window.ethereum != null
-      ? new ethers.providers.Web3Provider(window.ethereum)
-      : ethers.providers.getDefaultProvider();
-  console.log("provider", provider);
+      window.ethereum != null
+        ? new ethers.providers.Web3Provider(window.ethereum)
+        : ethers.providers.getDefaultProvider();
+    console.log("provider", provider);
 
-  //signer
+    //signer
 
-  const signer = provider.getSigner();
+    const signer = provider.getSigner();
 
-  console.log("signer", signer);
-  // contract instance
+    console.log("signer", signer);
+    // contract instance
 
-  const contract = new ethers.Contract(tokenAddress, tokenAbi, signer);
+    const contract = new ethers.Contract(tokenAddress, tokenAbi, signer);
 
-  console.log("contract", contract);
+    console.log("contract", contract);
 
-try {
-  const balance = await contract.allowance(address,contract_address);
+    try {
+      const balance = await contract.allowance(address, contract_address);
 
-  console.log("Approval:",balance)
+      console.log("Approval:", balance);
 
-  return balance.toString();
-} catch (error) {
-  console.log("error in error",error);
-  
-}
-
-  }
-  else{
+      return balance.toString();
+    } catch (error) {
+      console.log("error in error", error);
+    }
+  } else {
     const provider =
-    window.ethereum != null
-      ? new ethers.providers.Web3Provider(window.ethereum)
-      : ethers.providers.getDefaultProvider();
-  console.log("provider", provider);
+      window.ethereum != null
+        ? new ethers.providers.Web3Provider(window.ethereum)
+        : ethers.providers.getDefaultProvider();
+    console.log("provider", provider);
 
-  //signer
+    //signer
 
-  const signer = provider.getSigner();
+    const signer = provider.getSigner();
 
-  console.log("signer", signer);
-  // contract instance
+    console.log("signer", signer);
+    // contract instance
 
-  const contract = new ethers.Contract(tokenAddress, tokenAbi, signer);
+    const contract = new ethers.Contract(tokenAddress, tokenAbi, signer);
 
-  console.log("contract", contract);
-  const balance = await contract.allowance(address,contract_address);
+    console.log("contract", contract);
+    const balance = await contract.allowance(address, contract_address);
 
-  return balance.toString();
-
+    return balance.toString();
   }
-
-
 };
-
-
-
- 
- 
-
-
-
-
 
 export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
   // console.log("Getting output amount");
@@ -332,7 +336,7 @@ export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
     );
 
     // Log the entire transaction result to debug
-   // console.log("Transaction Result:", tx);
+    // console.log("Transaction Result:", tx);
 
     // Check if amounts are present in the transaction result
     if (!tx.amounts || tx.amounts.length === 0) {
@@ -362,16 +366,6 @@ export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
     return null;
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 export const Swap = async (amountin, tokenin, tokenout, to) => {
   if (!amountin || !tokenin || !tokenout || !to) {
@@ -407,14 +401,15 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
     );
 
     // Extract trade parameters from the result
-    const amounts = result.amounts;
-    const adapters = result.adapters;
-    const path = [
-      "0x420000000000000000000000000000000000000A",
-      tokenin,
-      tokenout,
-    ];
-    const recipients = result.recipients;
+    const amounts = result["amounts"];
+    const adapters = result["adapters"];
+    // const path = [
+    //   "0x420000000000000000000000000000000000000A",
+    //   tokenin,
+    //   tokenout,
+    // ];
+    const path = result["path"];
+    const recipients = result["recipients"];
 
     console.log(result);
 
@@ -435,39 +430,40 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
     }
 
     const amountOut = amounts[amounts.length - 1]; // Final output amount
+    const tradeParams = {
+      amountIn,
+      amountOut,
+      path,
+      adapters,
+      recipients,
+    };
 
     // Ensure the path starts with WETH
-    
- 
+
     // Proceed with the swap logic
     if (
       tokenin !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000" &&
       tokenout !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
     ) {
-      const tx = await contract.swapNoSplit(
-        { amountIn, amountOut, path, adapters, recipients },
-        0,
-        to
-      );
+      console.log("diff tokens");
+
+      const tx = await contract.swapNoSplit(tradeParams, 0, to);
       await tx.wait();
       console.log("Transaction successful:", tx);
       return tx;
     } else if (tokenin === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
-      const tx = await contract.swapNoSplitFromETH(
-        { amountIn, amountOut, path, adapters, recipients },
-        0,
-        to,
-        { value: amountIn }
-      );
+      console.log("from eth");
+
+      const tx = await contract.swapNoSplitFromETH(tradeParams, 0, to, {
+        value: amountIn,
+      });
       await tx.wait();
       console.log("Transaction successful:", tx);
       return tx;
     } else if (tokenout === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
-      const tx = await contract.swapNoSplitToETH(
-        { amountIn, amountOut, path, adapters, recipients },
-        0,
-        to
-      );
+      console.log("to eth");
+
+      const tx = await contract.swapNoSplitToETH(tradeParams, 0, to);
       await tx.wait();
       console.log("Transaction successful:", tx);
       return tx;
@@ -476,10 +472,3 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
     console.error("Error executing swap:", error);
   }
 };
-
-
-
-
-
-
-
