@@ -60,7 +60,11 @@ const TransactionSwap = ({
           <h1 className="text-start text-white text-base sm:text-2xl font-semibold">
             Swap
           </h1>
-          <IoIosClose size={28} className="cursor-pointer" onClick={onClose} />
+          <IoIosClose
+            size={28}
+            className="cursor-pointer text-notConnectedText hover:text-white"
+            onClick={onClose}
+          />
         </div>
         <div className="flex flex-col gap-1.5 sm:gap-3">
           <div className="text-white flex">
@@ -70,10 +74,10 @@ const TransactionSwap = ({
               className="sm:w-10 w-5 sm:h-10 h-5 rounded-full object-cover mr-2"
             />
             <div className="flex flex-col">
-              <p className="font-semibold text-[12px] sm:text-base text-left">
+              <p className="sm:text-sm text-[10px] font-medium text-balanceText text-start">
                 {fromToken.name}
               </p>
-              <h1 className="sm:text-sm text-[10px] text-balanceText text-start">
+              <h1 className="font-semibold text-[12px] sm:text-2xl text-left">
                 {inputVal}
               </h1>
             </div>
@@ -86,10 +90,10 @@ const TransactionSwap = ({
               className="sm:w-10 w-5 sm:h-10 h-5 rounded-full object-cover mr-2"
             />
             <div className="flex flex-col">
-              <p className="font-semibold text-[12px] sm:text-base text-left">
+              <p className="sm:text-sm text-[10px] font-medium text-balanceText text-start">
                 {toToken.name}
               </p>
-              <h1 className="sm:text-sm text-[10px] text-balanceText text-start">
+              <h1 className="font-semibold text-[12px] sm:text-2xl text-left">
                 {outputVal}
               </h1>
             </div>
@@ -98,27 +102,27 @@ const TransactionSwap = ({
 
         <div className="text-white my-2 sm:my-6 flex flex-col gap-1">
           <div className="flex justify-between">
-            <p className="sm:text-[16px] text-[9px] text-two text-start">
+            <p className="sm:text-[14px] text-[9px] text-two text-start">
               Minimum received
             </p>
-            <p className="sm:text-[16px] text-[9px] text-two text-right">
+            <p className="sm:text-[14px] text-[9px] text-two text-right">
               {formatBalance(outputVal)} {toToken.name}
             </p>
           </div>
           <div className="flex justify-between gap-2">
-            <p className="sm:text-[16px] text-[9px] text-two text-start">
+            <p className="sm:text-[14px] text-[9px] text-two text-start">
               {fromToken.name}/{toToken.name} Rate
             </p>
-            <p className="sm:text-[16px] text-[9px] text-two text-right flex items-center">
+            <p className="sm:text-[14px] text-[9px] text-two text-right flex items-center">
               1 {fromToken.name} <BsArrowRight className="mx-1" /> 44.607{" "}
               {toToken.name}
             </p>
           </div>
           <div className="flex justify-between gap-2">
-            <p className="sm:text-[16px] text-[9px] text-two text-start">
+            <p className="sm:text-[14px] text-[9px] text-two text-start">
               {toToken.name}/{fromToken.name} Rate
             </p>
-            <p className="sm:text-[16px] text-[9px] text-two text-right flex items-center">
+            <p className="sm:text-[14px] text-[9px] text-two text-right flex items-center">
               1 {toToken.name} <BsArrowRight className="mx-1" /> 0.022{" "}
               {fromToken.name}
             </p>

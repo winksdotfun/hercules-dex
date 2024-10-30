@@ -225,6 +225,8 @@ export const GetBalance = async (address, tokenAddress, eth) => {
     return balance.toString();
   }
 };
+
+
 export const GetApproval = async (address, tokenAddress, eth) => {
   console.log("Addres", address, "tokenAddress", tokenAddress, "eth", eth);
   // provider
@@ -345,20 +347,20 @@ export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
 
     // Convert the final output amount to a readable format
     const outputAmountRaw = tx.amounts[tx.amounts.length - 1];
-    //console.log("Raw Output Amount:", outputAmountRaw.toString());
+    console.log("Raw Output Amount:", outputAmountRaw.toString());
 
-    // Use formatUnits for output amount with the correct decimals
+    //Use formatUnits for output amount with the correct decimals
     const outputAmountFormatted = ethers.utils.formatUnits(
       outputAmountRaw,
       tokenOutDecimals
     );
-    //console.log("Formatted Output Amount:", outputAmountFormatted);
+    console.log("Formatted Output Amount:", outputAmountFormatted);
 
     // Round and format the output amount to the correct number of decimal places
     const outputAmountRounded = parseFloat(outputAmountFormatted).toFixed(
       tokenOutDecimals
     );
-    //console.log("Rounded Output Amount:", outputAmountRounded);
+    console.log("Rounded Output Amount:", outputAmountRounded);
 
     return outputAmountRounded; // Return rounded output amount
   } catch (error) {
@@ -373,25 +375,23 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
     return;
   }
 
-  console.log("Initializing swap...");
-  console.log("Amount In:", amountin);
-  console.log("From Token Address:", tokenin);
-  console.log("To Token Address:", tokenout);
-  console.log("Recipient Address:", to);
-
   const provider = window.ethereum
     ? new ethers.providers.Web3Provider(window.ethereum)
     : ethers.providers.getDefaultProvider();
   const signer = provider.getSigner();
   const contract = new ethers.Contract(contract_address, abi, signer);
+   const tokenInDecimal = new ethers.Contract(tokenin, tokenAbi, signer);
 
   try {
-    // Fetching all trade parameters
-    const amountIn = ethers.utils.parseUnits(amountin.toString(), 18); // Adjust decimals if needed
-    const trustedTokens = ["0x0000000000000000000000000000000000000000"]; // No specific trusted tokens
-    const maxSteps = 2; // Maximum number of hops allowed
+    // Parse amount for swap and define path ending with WETH if required
+     const tokenInDecimals = await tokenInDecimal.decimals();
+    const amountIn = ethers.utils.parseUnits(
+      amountin.toString(),
+      tokenInDecimals
+    );
+    const trustedTokens = ["0x0000000000000000000000000000000000000000"];
+    const maxSteps = 2;
 
-    // Call the smart contract to find the best path for the swap
     const result = await contract.findBestPath(
       amountIn,
       tokenin,
@@ -400,20 +400,14 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
       maxSteps
     );
 
-    // Extract trade parameters from the result
-    const amounts = result["amounts"];
-    const adapters = result["adapters"];
-    // const path = [
-    //   "0x420000000000000000000000000000000000000A",
-    //   tokenin,
-    //   tokenout,
-    // ];
-    const path = result["path"];
-    const recipients = result["recipients"];
+    let { amounts, adapters, path, recipients } = result;
 
-    console.log(result);
+    // Check if the path needs to end with WETH and adjust if necessary
+    const WETH_ADDRESS = "0x420000000000000000000000000000000000000A"; // Example WETH address, replace if different
+    if (tokenout === WETH_ADDRESS && path[path.length - 1] !== WETH_ADDRESS) {
+      path = [...path, WETH_ADDRESS];
+    }
 
-    // Validate trade parameters
     if (
       !amounts ||
       !Array.isArray(amounts) ||
@@ -429,46 +423,192 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
       return;
     }
 
-    const amountOut = amounts[amounts.length - 1]; // Final output amount
-    const tradeParams = {
-      amountIn,
-      amountOut,
-      path,
-      adapters,
-      recipients,
-    };
+    const amountOut = amounts[amounts.length - 1];
+    const tradeParams = { amountIn, amountOut, path, adapters, recipients };
 
-    // Ensure the path starts with WETH
-
-    // Proceed with the swap logic
+    // Swap logic based on token addresses
+    let tx;
     if (
       tokenin !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000" &&
       tokenout !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
     ) {
-      console.log("diff tokens");
-
-      const tx = await contract.swapNoSplit(tradeParams, 0, to);
-      await tx.wait();
-      console.log("Transaction successful:", tx);
-      return tx;
+      console.log("Executing token-to-token swap...");
+      tx = await contract.swapNoSplit(tradeParams, 0, to,{gasLimit:1000000});
     } else if (tokenin === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
-      console.log("from eth");
-
-      const tx = await contract.swapNoSplitFromETH(tradeParams, 0, to, {
-        value: amountIn,
+      console.log("Executing swap from ETH...");
+      tx = await contract.swapNoSplitFromETH(tradeParams, 0, to, {
+        gasLimit: 1000000
       });
-      await tx.wait();
-      console.log("Transaction successful:", tx);
-      return tx;
     } else if (tokenout === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
-      console.log("to eth");
-
-      const tx = await contract.swapNoSplitToETH(tradeParams, 0, to);
-      await tx.wait();
-      console.log("Transaction successful:", tx);
-      return tx;
+      console.log("Executing swap to ETH...");
+      tx = await contract.swapNoSplitToETH(tradeParams, 0, to, {
+        gasLimit: 1000000,
+      });
     }
+
+    await tx.wait();
+    console.log("Transaction successful:", tx);
+    return tx;
   } catch (error) {
     console.error("Error executing swap:", error);
+
+    // Check if it's due to gas estimation and provide a potential manual gas limit
+    if (error.code === ethers.errors.UNPREDICTABLE_GAS_LIMIT) {
+      console.error(
+        "Gas estimation failed. You may need to set a manual gas limit."
+      );
+    }
+  }
+};
+
+
+
+
+
+
+
+// Combined function to get token decimals and format balance
+export const getFormattedBalance = async (token, balance) => {
+  const provider = window.ethereum
+    ? new ethers.providers.Web3Provider(window.ethereum)
+    : ethers.providers.getDefaultProvider();
+
+  const signer = provider.getSigner();
+
+  // Contract instance for the token
+  const tokenContract = new ethers.Contract(token, tokenAbi, signer);
+  console.log(balance, "balance of from and to");
+
+  try {
+    // Fetch token decimals
+    const tokenDecimals = await tokenContract.decimals();
+
+    // Check if balance is valid and not an empty string or non-numeric
+    if (!balance || balance === "" || isNaN(balance)) {
+      console.warn("Invalid balance:", balance);
+      return "0.00000";
+    }
+
+    // Use formatUnits to format the balance according to token decimals
+    const outputAmountFormatted = ethers.utils.formatUnits(
+      balance,
+      tokenDecimals
+    );
+    //console.log("Formatted Output Amount:", outputAmountFormatted);
+
+    // Convert to a number and check for very small balances
+    const outputAmountRounded = parseFloat(outputAmountFormatted);
+//console.log("Rounded Output Amount:", outputAmountRounded);
+
+    if (outputAmountRounded < 0.00001 && outputAmountRounded > 0) {
+      return "<0.00001";
+    }
+
+    // Return formatted balance with fixed decimal places
+    return outputAmountRounded.toFixed(5); // Adjust decimal places as needed
+  } catch (error) {
+    console.error("Error fetching decimals or formatting balance:", error);
+    return "0.00000"; // Fallback display in case of error
+  }
+};
+
+
+// Example usage
+// const formattedBalance = await getFormattedBalance(tokenAddress, balance);
+// console.log("Formatted Balance:", formattedBalance);
+
+export const getMaxValue = async (token, balance) => {
+  const provider = window.ethereum
+    ? new ethers.providers.Web3Provider(window.ethereum)
+    : ethers.providers.getDefaultProvider();
+
+  const signer = provider.getSigner();
+
+  // Contract instance for the token
+  const tokenContract = new ethers.Contract(token, tokenAbi, signer);
+  console.log(balance, "balance of from and to");
+
+  try {
+    // Fetch token decimals
+    const tokenDecimals = await tokenContract.decimals();
+
+    // Check if balance is valid and not an empty string or non-numeric
+    if (!balance || balance === "" || isNaN(balance)) {
+      console.warn("Invalid balance:", balance);
+      return "0.00000";
+    }
+
+    
+    const outputAmountFormatted = ethers.utils.formatUnits(
+      balance,
+      tokenDecimals
+    );
+    //console.log("Formatted Output Amount:", outputAmountFormatted);
+
+    
+    const outputAmountRounded = parseFloat(outputAmountFormatted);
+    //console.log("Rounded Output Amount:", outputAmountRounded);
+
+   
+
+    // Return formatted balance with fixed decimal places
+    return outputAmountRounded.toFixed(tokenDecimals); // Adjust decimal places as needed
+  } catch (error) {
+    console.error("Error fetching decimals or formatting balance:", error);
+    return "0.00000"; // Fallback display in case of error
+  }
+};
+
+export const getDecimal = async (token) => {
+  const provider = window.ethereum
+    ? new ethers.providers.Web3Provider(window.ethereum)
+    : ethers.providers.getDefaultProvider();
+
+  const signer = provider.getSigner();
+
+  const tokenContract = new ethers.Contract(token, tokenAbi, signer);
+
+  try {
+    // Fetch token decimals
+    const tokenDecimals = await tokenContract.decimals();
+    return tokenDecimals; // Return the decimal places
+  } catch (error) {
+    console.error("Error fetching token decimals:", error);
+    return null; // Return null in case of error
+  }
+};
+
+
+export const getMaxBalance = async (token) => {
+  // Set up the provider and signer
+  const provider = window.ethereum
+    ? new ethers.providers.Web3Provider(window.ethereum)
+    : ethers.getDefaultProvider();
+
+  const signer = provider.getSigner();
+
+  // Contract instance for the token
+  const tokenContract = new ethers.Contract(token, tokenAbi, signer);
+
+  try {
+    // Get the account address
+    const accountAddress = await signer.getAddress();
+
+    // Fetch the token balance for the connected account
+    const balance = await tokenContract.balanceOf(accountAddress);
+    console.log("Raw Balance:", balance.toString());
+
+    // Fetch the decimals for the token
+    const tokenDecimals = await tokenContract.decimals();
+    console.log("Token Decimals:", tokenDecimals);
+
+    // Format the balance using the token's decimals
+    const formattedBalance = ethers.utils.formatUnits(balance, tokenDecimals);
+    console.log("Formatted Balance:", formattedBalance);
+
+    return formattedBalance; // You can return this value or set it in state
+  } catch (error) {
+    console.error("Error fetching balance or decimals:", error);
+    throw error; // Rethrow the error for handling in the calling function
   }
 };

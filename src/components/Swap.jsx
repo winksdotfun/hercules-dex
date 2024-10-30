@@ -9,344 +9,364 @@ import { Options } from "../constant/index"; // Ensure Options contains token da
 import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
-import { GetApproval,GetOutAmount, ApproveToken} from "../integration";
+import { GetApproval,GetOutAmount, ApproveToken, getFormattedBalance, getDecimal, getMaxBalance} from "../integration";
 import { Tokens } from "../constant/index";
 import tokenAbi from "../tokenabi.json";
 
 const Swap = () => {
+ 
+    const [maxBalance, setMaxBalance] = useState(null);
+  const [rawFromInput, setRawFromInput] = useState("");
   const [amountOut, setAmountOut] = useState(null);
-  const [routeerror, setRouteerror] = useState('')
- const [isDropdownOpenFrom, setIsDropdownOpenFrom] = useState(false);
- const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
- const [isMaxHovered, setIsMaxHovered] = useState(false);
- const [showTransactionSwap, setShowTransactionSwap] = useState(false); // State for TransactionSwap visibility
- const [inputBal, setInputBal] = useState(0.0)
- const [needApproval, setneedApproval] = useState(false)
+  const [routeerror, setRouteerror] = useState(false);
+  const [isDropdownOpenFrom, setIsDropdownOpenFrom] = useState(false);
+  const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
+  const [isMaxHovered, setIsMaxHovered] = useState(false);
+  const [showTransactionSwap, setShowTransactionSwap] = useState(false); // State for TransactionSwap visibility
+  const [inputBal, setInputBal] = useState(0.0);
+  const [needApproval, setneedApproval] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentNetwork, setCurrentNetwork] = useState("")
-  const [fromUSD,setFromUSD] =useState('')
-  const [toUSD, setToUSD] = useState('')
- const [selectedOptionFrom, setSelectedOptionFrom] = useState({
-   name: "m.USDC",
-   image: musdc,
-   address: "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21",
- });
- const [selectedOptionTo, setSelectedOptionTo] = useState({
-   name: "METIS",
-   image: metis,
-   address: "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
- });
- const [inputValue, setInputValue] = useState("");
- const [ouputvalue, setOutputValue] = useState("0.0")
- const [fromTokenBalance, setFromTokenBalance] = useState("0.00");
- const [toTokenBalance, setToTokenBalance] = useState("0.00");
- const { address: walletAddress, isConnected } = useAccount();
-
- const fetchTokenBalance = async (tokenAddress) => {
-   if (!walletAddress) return "0.00";
-
-   try {
-     const provider = new ethers.providers.Web3Provider(window.ethereum);
-     const contract = new ethers.Contract(
-       tokenAddress,
-       ["function balanceOf(address owner) view returns (uint256)"],
-       provider
-     );
-
-     const balance = await contract.balanceOf(walletAddress);
-     return ethers.utils.formatUnits(balance, 18);
-   } catch (error) {
-     console.error("Failed to fetch balance:", error);
-     return "0.00";
-   }
- };
-
-const formatBalance = (balance) => {
-  const numBalance = parseFloat(balance);
-  if (numBalance < 0.00001 && numBalance > 0) {
-    return "<0.00001";
-  }
-  return numBalance.toFixed(5);
-};
-
-const getBalances = async () => {
-  if (!isConnected) {
-    setFromTokenBalance("0.00");
-    setToTokenBalance("0.00");
-    return;
-  }
-
-  const fromBalance = await fetchTokenBalance(selectedOptionFrom.address);
-  const toBalance = await fetchTokenBalance(selectedOptionTo.address);
-  setInputBal(fromBalance)
-  setFromTokenBalance(formatBalance(fromBalance));
-  setToTokenBalance(formatBalance(toBalance));
-};
-useEffect(() => {
-  if (isConnected && walletAddress) {
-    getBalances();
-  }
-
-  const fetchOutAmount = async () => {
-    const amountIn = inputValue; // Replace with your input value
-    const tokenIn = selectedOptionFrom.address; // Replace with actual token address
-    const tokenOut = selectedOptionTo.address; // Replace with actual token address
-
-    console.log("Fetching Amount Out...");
-    console.log("Input Amount:", amountIn);
-    console.log("Token In Address:", tokenIn);
-    console.log("Token Out Address:", tokenOut);
-
-    // Provider
-    const provider = window.ethereum
-      ? new ethers.providers.Web3Provider(window.ethereum)
-      : ethers.providers.getDefaultProvider();
-    console.log("Provider:", provider);
-
-    // Signer
-    const signer = provider.getSigner();
-    console.log("Signer:", signer);
-
-    // Check tokenInDecimals
-    const tokenInCon = new ethers.Contract(tokenIn, tokenAbi, signer);
-    const tokenInDecimals = await tokenInCon.decimals();
-    const inputValueDecimals = (amountIn.split(".")[1] || []).length;
-
-    if (inputValueDecimals > tokenInDecimals) {
-      console.error(
-        "No route found: Input value exceeds token decimal places."
-      );
-      setRouteerror("Error: No route found"); // Update state or handle the error accordingly
-      return; // Exit the function
-    }
-
-    const amountOut = await GetOutAmount(amountIn, tokenIn, tokenOut);
-   setRouteerror('')
-    if (amountOut !== null) {
-      console.log("Fetched Amount Out:", amountOut);
-      setOutputValue(amountOut);
-    } else {
-      console.error("Amount out is null or undefined.");
-    }
-  };
-
-  // Initial fetch
-  fetchOutAmount();
-
-  // Set interval to fetch every 5 seconds
-  const intervalId = setInterval(fetchOutAmount, 5000); // Fetch every 5 seconds
-
-  // Cleanup function to clear the interval on unmount or when dependencies change
-  return () => {
-    clearInterval(intervalId);
-  };
-}, [
-  isConnected,
-  walletAddress,
-  selectedOptionFrom,
-  selectedOptionTo,
-  inputValue,
-]);
-
-
-
-
-
-
- const checkNetwork = async () => {
-   const provider =
-     window.ethereum != null
-       ? new ethers.providers.Web3Provider(window.ethereum)
-       : ethers.providers.getDefaultProvider();
-   console.log("provider", provider);
-   const network = await provider.getNetwork();
-   setCurrentNetwork(network.chainId)
-   console.log("Connected to network:", network);
- };
-
- 
- 
-
- useEffect(() => {
+  const [currentNetwork, setCurrentNetwork] = useState("");
+  const [fromUSD, setFromUSD] = useState("");
+  const [toUSD, setToUSD] = useState("");
+  const [selectedOptionFrom, setSelectedOptionFrom] = useState({
+    name: "m.USDC",
+    image: musdc,
+    address: "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21",
+  });
+  const [selectedOptionTo, setSelectedOptionTo] = useState({
+    name: "METIS",
+    image: metis,
+    address: "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
+  });
+  const [inputValue, setInputValue] = useState("");
+  const [ouputvalue, setOutputValue] = useState("0.0");
+  const [fromTokenBalance, setFromTokenBalance] = useState("0.00");
+  const [toTokenBalance, setToTokenBalance] = useState("0.00");
+  const { address: walletAddress, isConnected } = useAccount();
   
-   checkNetwork();
-   
-   
- }, []);
 
- const toggleDropdownFrom = () => {
-   setIsDropdownOpenFrom(!isDropdownOpenFrom);
-   setIsDropdownOpenTo(false);
- };
+ 
+  const fetchTokenBalance = async (tokenAddress) => {
+    if (!walletAddress) return "0.00";
 
- const toggleDropdownTo = () => {
-   setIsDropdownOpenTo(!isDropdownOpenTo);
-   setIsDropdownOpenFrom(false);
- };
- const handleOptionSelectFrom = (optionName) => {
-   const selected = Options.find((opt) => opt.head === optionName);
-   if (!selected) return;
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(
+        tokenAddress,
+        ["function balanceOf(address owner) view returns (uint256)"],
+        provider
+      );
 
-   if (selected.head === selectedOptionTo.name) {
-     setSelectedOptionTo(selectedOptionFrom);
-     setSelectedOptionFrom({
-       name: selected.head,
-       image: selected.image,
-       address: selected.address,
-     });
-   } else {
-     setSelectedOptionFrom({
-       name: selected.head,
-       image: selected.image,
-       address: selected.address,
-     });
-   }
-   setIsDropdownOpenFrom(false);
- };
-
- const handleOptionSelectTo = (optionName) => {
-   const selected = Options.find((opt) => opt.head === optionName);
-   if (!selected) return;
-
-   if (selected.head === selectedOptionFrom.name) {
-     setSelectedOptionFrom(selectedOptionTo);
-     setSelectedOptionTo({
-       name: selected.head,
-       image: selected.image,
-       address: selected.address,
-     });
-   } else {
-     setSelectedOptionTo({
-       name: selected.head,
-       image: selected.image,
-       address: selected.address,
-     });
-   }
-   setIsDropdownOpenTo(false);
- };
-
- const closeDropdown = () => {
-   setIsDropdownOpenFrom(false);
-   setIsDropdownOpenTo(false);
- };
-
-
- const handleApproval = async() => {
-  try {
-    const res = await GetApproval(walletAddress, selectedOptionFrom.address, metis)
-
-    console.log("res",res);
-    if(res === "0"){
-      setneedApproval(true)
+      const balance = await contract.balanceOf(walletAddress);
+      return balance;
+    } catch (error) {
+      console.error("Failed to fetch balance:", error);
+      return "0.00";
     }
-    
-  } catch (error) {
-    console.log("eerror in alloaef",error);
-    
-  }
- }
- const handleGetOut = async(validValue) => {
-  try {
-    const res = await GetOutAmount(validValue, selectedOptionFrom.address, selectedOptionTo.address)
+  };
 
-    console.log("res",res);
-   
-    
-  } catch (error) {
-    console.log("eerror in get out",error);
-    
-  }
- }
+  const getBalances = async () => {
+    if (!isConnected) {
+      setFromTokenBalance("0.00");
+      setToTokenBalance("0.00");
+      return;
+    }
 
- const handleInputChange = (e) => {
-   const value = e.target.value;
-   const validValue = value.replace(/[^0-9.]/g, "");
-   if (validValue.split(".").length > 2) return;
+    try {
+      // Fetch balances
+      const fromBalance = await fetchTokenBalance(selectedOptionFrom.address);
+      const toBalance = await fetchTokenBalance(selectedOptionTo.address);
+      setRawFromInput(fromBalance);
+      // Get decimals for each token
+      const fromDecimals = await getFormattedBalance(
+        selectedOptionFrom.address,
+        fromBalance
+      );
+      const toDecimals = await getFormattedBalance(
+        selectedOptionTo.address,
+        toBalance
+      );
+      setInputBal(fromBalance);
+      setFromTokenBalance(fromDecimals);
+      setToTokenBalance(toDecimals);
+    } catch (error) {
+      console.error("Error fetching balances or decimals:", error);
+      setFromTokenBalance("0.00");
+      setToTokenBalance("0.00");
+    }
+  };
 
-   setInputValue(validValue);
+  useEffect(() => {
+    if (isConnected && walletAddress) {
+      getBalances();
+    }
 
-   if (selectedOptionFrom.name !== "METIS") {
-     handleApproval();
-   }
-   handleGetOut(validValue)
-   
- };
+    const fetchOutAmount = async () => {
+      const amountIn = inputValue; // Replace with your input value
+      const tokenIn = selectedOptionFrom.address; // Replace with actual token address
+      const tokenOut = selectedOptionTo.address; // Replace with actual token address
 
- const handleKeyPress = (e) => {
-   if (e.key === "-") {
-     e.preventDefault();
-   }
- };
+      console.log("Fetching Amount Out...");
+      console.log("Input Amount:", amountIn);
+      console.log("Token In Address:", tokenIn);
+      console.log("Token Out Address:", tokenOut);
 
- const handleSwap = () => {
-   const temp = selectedOptionFrom;
-   setSelectedOptionFrom(selectedOptionTo);
-   setSelectedOptionTo(temp);
- };
+      // Provider
+      const provider = window.ethereum
+        ? new ethers.providers.Web3Provider(window.ethereum)
+        : ethers.providers.getDefaultProvider();
+      console.log("Provider:", provider);
 
- const handleMaxClick = () => {
-   setInputValue( inputBal);
- };
+      // Signer
+      const signer = provider.getSigner();
+      console.log("Signer:", signer);
 
- // Handle showing the TransactionSwap component
- const handleShowTransactionSwap = () => {
-   setShowTransactionSwap(true);
- };
+      // Check tokenInDecimals
+      const tokenInCon = new ethers.Contract(tokenIn, tokenAbi, signer);
+      const tokenInDecimals = await tokenInCon.decimals();
+      const inputValueDecimals = (amountIn.split(".")[1] || []).length;
 
- // Close the TransactionSwap component
- const handleCloseTransactionSwap = () => {
-   setShowTransactionSwap(false);
- };
+      if (inputValueDecimals > tokenInDecimals) {
+        console.error(
+          "No route found: Input value exceeds token decimal places."
+        );
+        setRouteerror(true); // Update state or handle the error accordingly
+        return; // Exit the function
+      }
 
- const handleApproveToken = async () => {
-   setIsProcessing(true); // Set processing state to true
-   try {
-     const tx = await ApproveToken(selectedOptionFrom.address);
-     await tx.wait(); // Wait for the transaction to be mined
-     console.log("Transaction completed:", tx);
-     setneedApproval(false); // Approval was successful
-   } catch (error) {
-     console.error("Error during token approval:", error);
+      const amountOut = await GetOutAmount(amountIn, tokenIn, tokenOut);
+      setRouteerror(false);
+      if (amountOut !== null) {
+        console.log("Fetched Amount Out:", amountOut);
+        setOutputValue(amountOut);
+      } else {
+        console.error("Amount out is null or undefined.");
+      }
+    };
 
-     // If the error indicates the transaction was canceled by the user
-     if (
-       error.code === 4001 ||
-       error.message.includes("User denied transaction")
-     ) {
-       setneedApproval(true);
-     }
-   } finally {
-     setIsProcessing(false); // Set processing state back to false
-   }
- };
+    fetchOutAmount();
+  }, [
+    isConnected,
+    walletAddress,
+    selectedOptionFrom,
+    selectedOptionTo,
+    inputValue,
+  ]);
 
- const isInsufficientBalance = parseFloat(inputValue) > parseFloat(inputBal);
+  const checkNetwork = async () => {
+    const provider =
+      window.ethereum != null
+        ? new ethers.providers.Web3Provider(window.ethereum)
+        : ethers.providers.getDefaultProvider();
+    console.log("provider", provider);
+    const network = await provider.getNetwork();
+    setCurrentNetwork(network.chainId);
+    console.log("Connected to network:", network);
+  };
+
+  useEffect(() => {
+    checkNetwork();
+  }, []);
+
+  const toggleDropdownFrom = () => {
+    setIsDropdownOpenFrom(!isDropdownOpenFrom);
+    setIsDropdownOpenTo(false);
+  };
+
+  const toggleDropdownTo = () => {
+    setIsDropdownOpenTo(!isDropdownOpenTo);
+    setIsDropdownOpenFrom(false);
+  };
+  const handleOptionSelectFrom = (optionName) => {
+    const selected = Options.find((opt) => opt.head === optionName);
+    if (!selected) return;
+
+    if (selected.head === selectedOptionTo.name) {
+      setSelectedOptionTo(selectedOptionFrom);
+      setSelectedOptionFrom({
+        name: selected.head,
+        image: selected.image,
+        address: selected.address,
+      });
+    } else {
+      setSelectedOptionFrom({
+        name: selected.head,
+        image: selected.image,
+        address: selected.address,
+      });
+    }
+    setIsDropdownOpenFrom(false);
+  };
+
+  const handleOptionSelectTo = (optionName) => {
+    const selected = Options.find((opt) => opt.head === optionName);
+    if (!selected) return;
+
+    if (selected.head === selectedOptionFrom.name) {
+      setSelectedOptionFrom(selectedOptionTo);
+      setSelectedOptionTo({
+        name: selected.head,
+        image: selected.image,
+        address: selected.address,
+      });
+    } else {
+      setSelectedOptionTo({
+        name: selected.head,
+        image: selected.image,
+        address: selected.address,
+      });
+    }
+    setIsDropdownOpenTo(false);
+  };
+
+  const closeDropdown = () => {
+    setIsDropdownOpenFrom(false);
+    setIsDropdownOpenTo(false);
+  };
+
+  const handleApproval = async () => {
+    try {
+      const res = await GetApproval(
+        walletAddress,
+        selectedOptionFrom.address,
+        metis
+      );
+
+      console.log("res", res);
+      if (res === "0") {
+        setneedApproval(true);
+      }
+    } catch (error) {
+      console.log("eerror in alloaef", error);
+    }
+  };
+  const handleGetOut = async (validValue) => {
+    try {
+      const res = await GetOutAmount(
+        validValue,
+        selectedOptionFrom.address,
+        selectedOptionTo.address
+      );
+
+      console.log("res", res);
+    } catch (error) {
+      console.log("eerror in get out", error);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    const validValue = value.replace(/[^0-9.]/g, "");
+    if (validValue.split(".").length > 2) return;
+
+    setInputValue(validValue);
+
+    if (
+      selectedOptionFrom.address !==
+      "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
+    ) {
+      handleApproval();
+    }
+    handleGetOut(validValue);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "-") {
+      e.preventDefault();
+    }
+  };
+
+  const handleSwap = () => {
+    const temp = selectedOptionFrom;
+    setSelectedOptionFrom(selectedOptionTo);
+    setSelectedOptionTo(temp);
+  };
+
+  
+
+  // Handle showing the TransactionSwap component
+  const handleShowTransactionSwap = () => {
+    setShowTransactionSwap(true);
+  };
+
+  // Close the TransactionSwap component
+  const handleCloseTransactionSwap = () => {
+    setShowTransactionSwap(false);
+  };
+
+  const handleApproveToken = async () => {
+    setIsProcessing(true); // Set processing state to true
+    try {
+      const tx = await ApproveToken(selectedOptionFrom.address);
+      await tx.wait(); // Wait for the transaction to be mined
+      console.log("Transaction completed:", tx);
+      setneedApproval(false); // Approval was successful
+    } catch (error) {
+      console.error("Error during token approval:", error);
+
+      // If the error indicates the transaction was canceled by the user
+      if (
+        error.code === 4001 ||
+        error.message.includes("User denied transaction")
+      ) {
+        setneedApproval(true);
+      }
+    } finally {
+      setIsProcessing(false); // Set processing state back to false
+    }
+  };
+
  
 
- const fetchTokenPrice = (tokenAddress) => {
-   const token = Tokens.find(
-     (t) => t.address.toLowerCase() === tokenAddress.toLowerCase()
-   );
-   return token ? token.price : 0;
- };
- const calculateUSD = () => {
-   // Fetch token prices based on their addresses
-   const fromTokenPrice = fetchTokenPrice(selectedOptionFrom.address);
-   const toTokenPrice = fetchTokenPrice(selectedOptionTo.address);
-  console.log(fromTokenPrice, toTokenPrice);
-   // Calculate the USD values
-  const fromUSDValue = isNaN(inputValue) ? 0 : inputValue * fromTokenPrice;
-  const toUSDValue = isNaN(ouputvalue) ? 0 : ouputvalue * toTokenPrice;
+  const fetchTokenPrice = (tokenAddress) => {
+    const token = Tokens.find(
+      (t) => t.address.toLowerCase() === tokenAddress.toLowerCase()
+    );
+    console.log("Token Price:", token?.price); // Check the retrieved price
+    return token ? token.price : 0;
+  };
 
-   // Set the USD values with two decimal points
-   setFromUSD(fromUSDValue.toFixed(2));
-   console.log(fromUSD)
-   setToUSD(toUSDValue.toFixed(2));
- };
- useEffect(() => {
-   calculateUSD(); // Recalculate USD values when the selected options change
- }, [selectedOptionFrom, selectedOptionTo, inputValue, ouputvalue]);
+  const calculateUSD = () => {
+    // Fetch token prices based on their addresses
+    const fromTokenPrice = fetchTokenPrice(selectedOptionFrom.address);
+    const toTokenPrice = fetchTokenPrice(selectedOptionTo.address);
+    console.log(fromTokenPrice, toTokenPrice);
+    // Calculate the USD values
+    const fromUSDValue = isNaN(inputValue) ? 0 : inputValue * fromTokenPrice;
+    const toUSDValue = isNaN(ouputvalue) ? 0 : ouputvalue * toTokenPrice;
 
+    // Set the USD values with two decimal points
+    setFromUSD(fromUSDValue.toFixed(2));
+    console.log(fromUSD);
+    setToUSD(toUSDValue.toFixed(2));
+  };
+  useEffect(() => {
+    calculateUSD(); // Recalculate USD values when the selected options change
+  }, [selectedOptionFrom, selectedOptionTo, inputValue, ouputvalue]);
+
+    const isInsufficientBalance =
+      parseFloat(inputValue) > parseFloat(maxBalance);
+    // console.log(isInsufficientBalance, inputValue, MaxBalance);
+
+     const handleMaxClick = () => {
+    setInputValue(maxBalance);
+     };
+
+     useEffect(() => {
+       const fetchBalance = async () => {
+         if (selectedOptionFrom) {
+           try {
+             const balance = await getMaxBalance(selectedOptionFrom.address);
+             setMaxBalance(balance); // Update state with the max balance
+           } catch (error) {
+             setError("Error fetching max balance."); // Handle any errors
+           }
+         }
+       };
+
+       fetchBalance();
+     }, [selectedOptionFrom]); 
 
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-black relative">
@@ -532,7 +552,7 @@ useEffect(() => {
             aria-atomic="true"
             className="alert mt-3 mb-0 bg-[#ff353519] bg-opacity-50 text-[#ff3535] border-none font-normal px-6 text-[13px] text-left p-2 rounded-full"
           >
-            {routeerror}
+            {"Error: No route found"}
           </div>
         )}
 
@@ -564,6 +584,8 @@ useEffect(() => {
                       Processing...
                     </div>
                   ) : (
+                    selectedOptionFrom.address !==
+                      "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000" &&
                     `Approve ${selectedOptionFrom.name}`
                   )}
                 </button>
