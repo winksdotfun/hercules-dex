@@ -369,6 +369,104 @@ export const GetOutAmount = async (amountIn, tokenIn, tokenOut) => {
   }
 };
 
+
+// export const Swap = async (amountin, tokenin, tokenout, to) => {
+//   console.log();
+//   if (!amountin || !tokenin || !tokenout || !to) {
+//     console.error("Invalid swap parameters provided.");
+//     return;
+//   }
+
+//   const provider = window.ethereum
+//     ? new ethers.providers.Web3Provider(window.ethereum)
+//     : ethers.providers.getDefaultProvider();
+//   const signer = provider.getSigner();
+//   const contract = new ethers.Contract(contract_address, abi, signer);
+//    const tokenInDecimal = new ethers.Contract(tokenin, tokenAbi, signer);
+
+//   try {
+//     // Parse amount for swap and define path ending with WETH if required
+//      const tokenInDecimals = await tokenInDecimal.decimals();
+//     const amountIn = ethers.utils.parseUnits(
+//       amountin.toString(),
+//       tokenInDecimals
+//     );
+//     const trustedTokens = ["0x0000000000000000000000000000000000000000"];
+//     const maxSteps = 2;
+
+//     const result = await contract.findBestPath(
+//       amountIn,
+//       tokenin,
+//       tokenout,
+//       trustedTokens,
+//       maxSteps
+//     );
+
+//     let { amounts, adapters, path, recipients } = result;
+
+//     // Check if the path needs to end with WETH and adjust if necessary
+//     const WETH_ADDRESS = "0x420000000000000000000000000000000000000A"; // Example WETH address, replace if different
+//     if (tokenout === WETH_ADDRESS && path[path.length - 1] !== WETH_ADDRESS) {
+//       path = [...path, WETH_ADDRESS];
+//     }
+
+//     if (
+//       !amounts ||
+//       !Array.isArray(amounts) ||
+//       amounts.length === 0 ||
+//       !adapters ||
+//       !Array.isArray(adapters) ||
+//       !path ||
+//       !Array.isArray(path) ||
+//       !recipients ||
+//       !Array.isArray(recipients)
+//     ) {
+//       console.error("Invalid trade parameters received:", result);
+//       return;
+//     }
+
+//     const amountOut = amounts[amounts.length - 1];
+//     const tradeParams = { amountIn, amountOut, path, adapters, recipients };
+
+//     // Swap logic based on token addresses
+//     let tx;
+//     if (
+//       tokenin !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000" &&
+//       tokenout !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
+//     ) {
+//       console.log("Executing token-to-token swap...");
+//       tx = await contract.swapNoSplit(tradeParams, 0, to,{gasLimit:1000000});
+//     } else if (tokenin === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
+//       console.log("Executing swap from ETH...");
+//       tx = await contract.swapNoSplitFromETH(tradeParams, 0, to, {
+//         value: amountIn,
+//         gasLimit: 1000000,
+//       });
+
+//     } else if (tokenout === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
+//       console.log("Executing swap to ETH...");
+//       tx = await contract.swapNoSplitToETH(tradeParams, 0, to, {
+//         gasLimit: 1000000,
+//       });
+//     }
+
+//     await tx.wait();
+//     console.log("Transaction successful:", tx);
+//     return tx;
+//   } catch (error) {
+//     console.error("Error executing swap:", error);
+
+//     // Check if it's due to gas estimation and provide a potential manual gas limit
+//     if (error.code === ethers.errors.UNPREDICTABLE_GAS_LIMIT) {
+//       console.error(
+//         "Gas estimation failed. You may need to set a manual gas limit."
+//       );
+//     }
+//   }
+// };
+
+
+
 export const Swap = async (amountin, tokenin, tokenout, to) => {
   if (!amountin || !tokenin || !tokenout || !to) {
     console.error("Invalid swap parameters provided.");
@@ -380,11 +478,10 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
     : ethers.providers.getDefaultProvider();
   const signer = provider.getSigner();
   const contract = new ethers.Contract(contract_address, abi, signer);
-   const tokenInDecimal = new ethers.Contract(tokenin, tokenAbi, signer);
+  const tokenInDecimal = new ethers.Contract(tokenin, tokenAbi, signer);
 
   try {
-    // Parse amount for swap and define path ending with WETH if required
-     const tokenInDecimals = await tokenInDecimal.decimals();
+    const tokenInDecimals = await tokenInDecimal.decimals();
     const amountIn = ethers.utils.parseUnits(
       amountin.toString(),
       tokenInDecimals
@@ -401,46 +498,33 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
     );
 
     let { amounts, adapters, path, recipients } = result;
-
-    // Check if the path needs to end with WETH and adjust if necessary
-    const WETH_ADDRESS = "0x420000000000000000000000000000000000000A"; // Example WETH address, replace if different
+    const WETH_ADDRESS = "0x420000000000000000000000000000000000000A";
     if (tokenout === WETH_ADDRESS && path[path.length - 1] !== WETH_ADDRESS) {
       path = [...path, WETH_ADDRESS];
     }
 
-    if (
-      !amounts ||
-      !Array.isArray(amounts) ||
-      amounts.length === 0 ||
-      !adapters ||
-      !Array.isArray(adapters) ||
-      !path ||
-      !Array.isArray(path) ||
-      !recipients ||
-      !Array.isArray(recipients)
-    ) {
+    if (!amounts || !adapters || !path || !recipients) {
       console.error("Invalid trade parameters received:", result);
       return;
     }
 
     const amountOut = amounts[amounts.length - 1];
     const tradeParams = { amountIn, amountOut, path, adapters, recipients };
-
-    // Swap logic based on token addresses
     let tx;
+
     if (
       tokenin !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000" &&
       tokenout !== "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
     ) {
-      console.log("Executing token-to-token swap...");
-      tx = await contract.swapNoSplit(tradeParams, 0, to,{gasLimit:1000000});
+      tx = await contract.swapNoSplit(tradeParams, 0, to, {
+        gasLimit: 1000000,
+      });
     } else if (tokenin === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
-      console.log("Executing swap from ETH...");
       tx = await contract.swapNoSplitFromETH(tradeParams, 0, to, {
-        gasLimit: 1000000
+        value: amountIn,
+        gasLimit: 1000000,
       });
     } else if (tokenout === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000") {
-      console.log("Executing swap to ETH...");
       tx = await contract.swapNoSplitToETH(tradeParams, 0, to, {
         gasLimit: 1000000,
       });
@@ -451,16 +535,19 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
     return tx;
   } catch (error) {
     console.error("Error executing swap:", error);
-
-    // Check if it's due to gas estimation and provide a potential manual gas limit
-    if (error.code === ethers.errors.UNPREDICTABLE_GAS_LIMIT) {
+    if (error.code === ethers.errors.CALL_EXCEPTION) {
       console.error(
-        "Gas estimation failed. You may need to set a manual gas limit."
+        "CALL_EXCEPTION: Transaction failed. Possible issues with contract parameters or state."
       );
+    } else if (error.code === ethers.errors.INSUFFICIENT_FUNDS) {
+      console.error("INSUFFICIENT_FUNDS: Check balance and gas requirements.");
+    } else if (error.code === ethers.errors.UNPREDICTABLE_GAS_LIMIT) {
+      console.error("UNPREDICTABLE_GAS_LIMIT: Try setting a manual gas limit.");
+    } else {
+      console.error("Unhandled error:", error);
     }
   }
 };
-
 
 
 

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoIosClose } from "react-icons/io";
 import { FaArrowDown } from "react-icons/fa6";
 import { BsArrowRight } from "react-icons/bs";
 import { Swap } from "../integration";
-import { ethers } from "ethers"; 
+import { ethers } from "ethers";
+import axios from "axios";
 
 const TransactionSwap = ({
   fromToken,
@@ -15,35 +16,63 @@ const TransactionSwap = ({
   outputVal,
 }) => {
   const [isMaxHovered, setIsMaxHovered] = useState(false);
-  const [fromAdd, setFromAdd] = useState('');
-  const [ToAdd, setToAdd] = useState("");
-  const [Input, setInput] = useState("");
+  const [fromPrice, setFromPrice] = useState(null);
+  const [toPrice, setToPrice] = useState(null);
 
- const handleSwapClick = async () => {
-   try {
+  useEffect(() => {
+    axios
+      .get("https://api.ultimatedigits.com/winks/proxy")
+      .then((response) => {
+        const tokens = response.data.data.tokens;
+        const fromTokenData = tokens[fromToken.address];
+        const toTokenData = tokens[toToken.address];
+
+        // Set prices if both tokens exist in the response
+        if (fromTokenData && toTokenData) {
+          setFromPrice(fromTokenData.price);
+          setToPrice(toTokenData.price);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error.message);
+      });
+  }, [fromToken.address, toToken.address]);
+
+  const calculateExchangeRate = () => {
+    if (fromPrice && toPrice) {
+      const fromToRate = toPrice / fromPrice;
+      const toFromRate = fromPrice / toPrice;
+      return {
+        fromToRate: fromToRate.toFixed(3),
+        toFromRate: toFromRate.toFixed(3),
+      };
+    }
+    return { fromToRate: "-", toFromRate: "-" };
+  };
+
+  const { fromToRate, toFromRate } = calculateExchangeRate();
+
+  const handleSwapClick = async () => {
+    try {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-
-      const amountin = inputVal; // Ensure this is a valid number
-      const tokenin = fromToken?.address; // Check fromToken is defined
-      const tokenout = toToken?.address; // Check toToken is defined
+      const amountin = inputVal;
+      const tokenin = fromToken?.address;
+      const tokenout = toToken?.address;
       const recipientAddress = await signer.getAddress();
 
-     // Ensure all values are defined
-     if (!amountin || !tokenin || !tokenout || !recipientAddress) {
-       throw new Error("One or more swap parameters are undefined.");
-     }
+      if (!amountin || !tokenin || !tokenout || !recipientAddress) {
+        throw new Error("One or more swap parameters are undefined.");
+      }
 
-     await Swap(amountin, tokenin, tokenout, recipientAddress);
-     console.log("Swap initiated successfully");
+      await Swap(amountin, tokenin, tokenout, recipientAddress);
+      console.log("Swap initiated successfully");
 
-     //if (onSwapClick) onSwapClick();
-   } catch (error) {
-     console.error("Error executing swap:", error);
-   }
- };
-
-
+      if (onSwapClick) onSwapClick();
+    } catch (error) {
+      console.error("Error executing swap:", error);
+    }
+  };
 
   const formatBalance = (balance) => {
     const numBalance = parseFloat(balance);
@@ -114,8 +143,8 @@ const TransactionSwap = ({
               {fromToken.name}/{toToken.name} Rate
             </p>
             <p className="sm:text-[14px] text-[9px] text-two text-right flex items-center">
-              1 {fromToken.name} <BsArrowRight className="mx-1" /> 44.607{" "}
-              {toToken.name}
+              1 {fromToken.name} <BsArrowRight className="mx-1" />
+              {toFromRate} {toToken.name}
             </p>
           </div>
           <div className="flex justify-between gap-2">
@@ -123,7 +152,7 @@ const TransactionSwap = ({
               {toToken.name}/{fromToken.name} Rate
             </p>
             <p className="sm:text-[14px] text-[9px] text-two text-right flex items-center">
-              1 {toToken.name} <BsArrowRight className="mx-1" /> 0.022{" "}
+              1 {toToken.name} <BsArrowRight className="mx-1" /> {fromToRate}{" "}
               {fromToken.name}
             </p>
           </div>

@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { useAccount } from "wagmi";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import musdc from "../assets/images/musdc.svg";
-import metis from "../assets/images/vmetis.png";
+import metis from "../assets/images/metis.png";
 import Token from "./Token";
 import { Options } from "../constant/index"; // Ensure Options contains token data
 import logo from "../assets/images/logo.svg";
@@ -12,12 +12,16 @@ import SwapContainer from "./SwapContainer";
 import { GetApproval,GetOutAmount, ApproveToken, getFormattedBalance, getDecimal, getMaxBalance} from "../integration";
 import { Tokens } from "../constant/index";
 import tokenAbi from "../tokenabi.json";
+import axios from "axios";
+
 
 const Swap = () => {
+
  
-    const [maxBalance, setMaxBalance] = useState(null);
+  const [usdInputValue, setUsdInputValue] = useState("");
+  const [usdOutputValue, setUsdOutputValue] = useState("");
+  const [maxBalance, setMaxBalance] = useState(null);
   const [rawFromInput, setRawFromInput] = useState("");
-  const [amountOut, setAmountOut] = useState(null);
   const [routeerror, setRouteerror] = useState(false);
   const [isDropdownOpenFrom, setIsDropdownOpenFrom] = useState(false);
   const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
@@ -27,8 +31,7 @@ const Swap = () => {
   const [needApproval, setneedApproval] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentNetwork, setCurrentNetwork] = useState("");
-  const [fromUSD, setFromUSD] = useState("");
-  const [toUSD, setToUSD] = useState("");
+  
   const [selectedOptionFrom, setSelectedOptionFrom] = useState({
     name: "m.USDC",
     image: musdc,
@@ -44,9 +47,77 @@ const Swap = () => {
   const [fromTokenBalance, setFromTokenBalance] = useState("0.00");
   const [toTokenBalance, setToTokenBalance] = useState("0.00");
   const { address: walletAddress, isConnected } = useAccount();
-  
+  const [tokensData, setTokensData] = useState({});
 
- 
+     useEffect(() => {
+       // Fetch token data when component mounts
+       axios
+         .get("https://api.ultimatedigits.com/winks/proxy")
+         .then((response) => {
+           const tokens = response.data.data.tokens;
+           setTokensData(tokens);
+           console.log(tokens)
+         })
+         .catch((error) => {
+           console.error("Error fetching data:", error.message);
+         });
+     }, []);
+
+   useEffect(() => {
+     // Recalculate USD values whenever inputValue or outputValue changes
+     const calculateUsdValues = () => {
+       // Calculate USD value for input
+       if (selectedOptionFrom && tokensData && inputValue > 0) {
+         const fromTokenData = tokensData[selectedOptionFrom.address];
+         if (fromTokenData) {
+           const tokenPriceInUSD = parseFloat(fromTokenData.price); // Price of from token in USD
+           const tokenAmount = parseFloat(inputValue); // User input in token amount
+
+           if (!isNaN(tokenPriceInUSD) && !isNaN(tokenAmount)) {
+             const calculatedUsdValue = tokenPriceInUSD * tokenAmount;
+             setUsdInputValue(
+               calculatedUsdValue < 0.01
+                 ? "<0.01"
+                 : calculatedUsdValue.toFixed(2)
+             );
+           } else {
+             setUsdInputValue("0"); // Fallback in case of invalid values
+           }
+         }
+       }
+
+       // Calculate USD value for output
+       if (selectedOptionTo && tokensData && ouputvalue > 0) {
+         const toTokenData = tokensData[selectedOptionTo.address];
+         if (toTokenData) {
+           const tokenPriceInUSD = parseFloat(toTokenData.price); // Price of to token in USD
+           const tokenAmount = parseFloat(ouputvalue); // User output in token amount
+
+           if (!isNaN(tokenPriceInUSD) && !isNaN(tokenAmount)) {
+             const calculatedUsdValue = tokenPriceInUSD * tokenAmount;
+             setUsdOutputValue(
+               calculatedUsdValue < 0.01
+                 ? "<0.01"
+                 : calculatedUsdValue.toFixed(2)
+             );
+           } else {
+             setUsdOutputValue("0"); // Fallback in case of invalid values
+           }
+         }
+       }
+     };
+
+     calculateUsdValues();
+   }, [
+     inputValue,
+     ouputvalue,
+     selectedOptionFrom,
+     selectedOptionTo,
+     tokensData,
+   ]);
+
+
+
   const fetchTokenBalance = async (tokenAddress) => {
     if (!walletAddress) return "0.00";
 
@@ -132,7 +203,7 @@ const Swap = () => {
           "No route found: Input value exceeds token decimal places."
         );
         setRouteerror(true); // Update state or handle the error accordingly
-        return; // Exit the function
+        return; 
       }
 
       const amountOut = await GetOutAmount(amountIn, tokenIn, tokenOut);
@@ -327,23 +398,7 @@ const Swap = () => {
     return token ? token.price : 0;
   };
 
-  const calculateUSD = () => {
-    // Fetch token prices based on their addresses
-    const fromTokenPrice = fetchTokenPrice(selectedOptionFrom.address);
-    const toTokenPrice = fetchTokenPrice(selectedOptionTo.address);
-    console.log(fromTokenPrice, toTokenPrice);
-    // Calculate the USD values
-    const fromUSDValue = isNaN(inputValue) ? 0 : inputValue * fromTokenPrice;
-    const toUSDValue = isNaN(ouputvalue) ? 0 : ouputvalue * toTokenPrice;
 
-    // Set the USD values with two decimal points
-    setFromUSD(fromUSDValue.toFixed(2));
-    console.log(fromUSD);
-    setToUSD(toUSDValue.toFixed(2));
-  };
-  useEffect(() => {
-    calculateUSD(); // Recalculate USD values when the selected options change
-  }, [selectedOptionFrom, selectedOptionTo, inputValue, ouputvalue]);
 
     const isInsufficientBalance =
       parseFloat(inputValue) > parseFloat(maxBalance);
@@ -431,8 +486,8 @@ const Swap = () => {
                 <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
                   Balance:{isConnected ? fromTokenBalance : "0.0"}
                 </div>
-                <div className="sm:text-xs text-[10px] text-white text-start font-medium  px-1  sm:px-2">
-                  $
+                <div className="sm:text-xs text-[10px] text-white text-start font-normal  px-1  sm:px-2">
+                  {usdInputValue && `$${usdInputValue}`}
                 </div>
               </div>
             </div>
@@ -526,8 +581,8 @@ const Swap = () => {
                 <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
                   Balance: {isConnected ? toTokenBalance : "0.0"}
                 </div>
-                <div className="sm:text-xs text-[10px] text-white text-start font-medium  px-1 mr-10 sm:px-2">
-                  $
+                <div className="sm:text-xs text-[10px] text-white text-start font-normal  px-1 mr-10 sm:px-2">
+                  {usdInputValue && `$${usdOutputValue}`}
                 </div>
               </div>
             </div>

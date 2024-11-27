@@ -10,6 +10,68 @@ const Token = ({ closeDropdown, onSelectToken }) => {
   const [balances, setBalances] = useState({});
   const { address: walletAddress, isConnected } = useAccount();
 
+   const [tokensData, setTokensData] = useState([]);
+
+   // Fetch GraphQL data
+   const fetchGraphQLData = async () => {
+     const url =
+       "https://metisapi.0xgraph.xyz/api/public/067888d1-9438-4662-8f3e-4a65bbd440ba/subgraphs/cryptoalgebra/analytics-v1/v0.0.1/gn";
+     const query = `
+      query MyQuery {
+        tokens {
+          id
+          symbol
+          name
+          decimals
+          volumeUSD
+          totalValueLockedUSD
+          tokenDayData {
+            priceUSD
+            id
+            date
+          }
+        }
+      }
+    `;
+
+     try {
+       const response = await fetch(url, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+         },
+         body: JSON.stringify({ query }),
+       });
+
+       const result = await response.json();
+       console.log(result)
+
+       // Process data: Convert date fields to readable format for all tokenDayData
+       const processedData = result.data.tokens.map((token) => {
+         const tokenDayData =
+           token.tokenDayData?.map((dayData) => ({
+             ...dayData,
+             readableDate: dayData.date
+               ? new Date(dayData.date * 1000).toLocaleString()
+               : "No Date Available",
+           })) || [];
+
+         // Extract the last entry from tokenDayData
+         const lastDayData = tokenDayData[tokenDayData.length - 1] || null;
+
+         return { ...token, tokenDayData, lastDayData };
+       });
+         
+       setTokensData(processedData);
+     } catch (error) {
+       console.error("Error fetching GraphQL data:", error);
+     }
+   };
+
+   useEffect(() => {
+     fetchGraphQLData();
+   }, []);
+
   const filteredOptions = useMemo(
     () =>
       Options.filter((option) =>
@@ -127,7 +189,7 @@ const Token = ({ closeDropdown, onSelectToken }) => {
             Tokens list
           </h1>
           <div>
-            {sortedOptions.length > 0 ? (
+            {tokensData.length > 0 ? (
               sortedOptions.map((option) => (
                 <div
                   key={option.id}
