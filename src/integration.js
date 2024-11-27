@@ -489,10 +489,23 @@ export const Swap = async (amountin, tokenin, tokenout, to) => {
     const trustedTokens = ["0x0000000000000000000000000000000000000000"];
     const maxSteps = 2;
 
+let tempTokIn;
+let tempTokOut;
+    if(tokenin === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"){
+      tempTokIn ="0x75cb093E4D61d2A2e65D8e0BBb01DE8d89b53481"
+    }else{
+      tempTokIn=tokenin
+    }
+    if(tokenout === "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"){
+      tempTokOut ="0x75cb093E4D61d2A2e65D8e0BBb01DE8d89b53481"
+    }else{
+      tempTokOut= tokenout
+    }
+
     const result = await contract.findBestPath(
       amountIn,
-      tokenin,
-      tokenout,
+      tempTokIn,
+      tempTokOut,
       trustedTokens,
       maxSteps
     );

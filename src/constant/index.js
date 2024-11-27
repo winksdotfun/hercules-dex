@@ -186,7 +186,7 @@ import zke from "../assets/images/zke.png";
      image: metis,
      head: "METIS",
      desc: "Metis",
-     address: "0xdeaddeaddeaddeaddeaddeaddeaddeaddead0000",
+     address: "0x75cb093E4D61d2A2e65D8e0BBb01DE8d89b53481",
    },
    {
      id: 23,
@@ -292,7 +292,7 @@ const Commonbases = [
     image: metis,
     head: "METIS",
     desc: "Metis",
-    address: "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
+    address: "0x75cb093E4D61d2A2e65D8e0BBb01DE8d89b53481",
   },
   {
     id: 20,
@@ -347,7 +347,7 @@ const Commonbases = [
       },
        
        {
-        "address": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
+        "address": "0x75cb093E4D61d2A2e65D8e0BBb01DE8d89b53481",
         "symbol": "Metis",
         "name": "Metis Token",
         "decimals": "18",
