@@ -5,6 +5,7 @@ import { BsArrowRight } from "react-icons/bs";
 import { Swap } from "../integration";
 import { ethers } from "ethers";
 import axios from "axios";
+import { logAnalyticsEvent, Events } from '../firebase/analytics';
 
 const TransactionSwap = ({
   fromToken,
@@ -71,6 +72,17 @@ const TransactionSwap = ({
         throw new Error("One or more swap parameters are undefined.");
       }
 
+      // Log swap initiation
+      logAnalyticsEvent(Events.SWAP_INITIATED, {
+        token_in: fromToken?.name,
+        token_in_address: tokenin,
+        token_out: toToken?.name,
+        token_out_address: tokenout,
+        amount_in: amountin,
+        amount_out: outputVal,
+        user_address: recipientAddress
+      });
+
       setProcessModel(true);
 
       // Explicitly handle Swap response and errors
@@ -91,6 +103,18 @@ const TransactionSwap = ({
       console.log("Swap initiated successfully:", res);
 
       if (res) {
+        // Log successful swap
+        logAnalyticsEvent(Events.SWAP_COMPLETED, {
+          token_in: fromToken?.name,
+          token_in_address: tokenin,
+          token_out: toToken?.name,
+          token_out_address: tokenout,
+          amount_in: amountin,
+          amount_out: outputVal,
+          user_address: recipientAddress,
+          transaction_hash: res.hash || 'unknown'
+        });
+
         setSuccess(true); // Mark as
         setIV('');
         setOV('');
@@ -106,9 +130,27 @@ const TransactionSwap = ({
       ) {
         console.log("User canceled the swap.");
         setCancelled(true); // Handle cancellation
+        
+        // Log swap cancellation
+        logAnalyticsEvent(Events.SWAP_CANCELLED, {
+          token_in: fromToken?.name,
+          token_out: toToken?.name,
+          amount_in: inputVal,
+          error_code: error.code,
+          error_message: error.message
+        });
       }
       else{
         setTransNotSuccess(true);
+        
+        // Log swap failure
+        logAnalyticsEvent(Events.SWAP_FAILED, {
+          token_in: fromToken?.name,
+          token_out: toToken?.name,
+          amount_in: inputVal,
+          error_code: error.code,
+          error_message: error.message
+        });
       }
       
       // Update UI states

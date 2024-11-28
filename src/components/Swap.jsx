@@ -5,19 +5,18 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import musdc from "../assets/images/musdc.svg";
 import metis from "../assets/images/metis.png";
 import Token from "./Token";
-import { Options } from "../constant/index"; // Ensure Options contains token data
+import { Options } from "../constant/index";
 import logo from "../assets/images/logo.svg";
 import CustomButton from "./CustomButton";
 import SwapContainer from "./SwapContainer";
-import { GetApproval,GetOutAmount, ApproveToken, getFormattedBalance, getDecimal, getMaxBalance} from "../integration";
+import { GetApproval, GetOutAmount, ApproveToken, getFormattedBalance, getDecimal, getMaxBalance } from "../integration";
 import { Tokens } from "../constant/index";
 import tokenAbi from "../tokenabi.json";
 import axios from "axios";
-
+import { logAnalyticsEvent, Events } from '../firebase/analytics';
 
 const Swap = () => {
 
- 
   const [usdInputValue, setUsdInputValue] = useState("");
   const [usdOutputValue, setUsdOutputValue] = useState("");
   const [maxBalance, setMaxBalance] = useState(null);
@@ -26,7 +25,7 @@ const Swap = () => {
   const [isDropdownOpenFrom, setIsDropdownOpenFrom] = useState(false);
   const [isDropdownOpenTo, setIsDropdownOpenTo] = useState(false);
   const [isMaxHovered, setIsMaxHovered] = useState(false);
-  const [showTransactionSwap, setShowTransactionSwap] = useState(false); // State for TransactionSwap visibility
+  const [showTransactionSwap, setShowTransactionSwap] = useState(false); 
   const [inputBal, setInputBal] = useState(0.0);
   const [needApproval, setneedApproval] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,74 +48,68 @@ const Swap = () => {
   const { address: walletAddress, isConnected } = useAccount();
   const [tokensData, setTokensData] = useState({});
 
-     useEffect(() => {
-       // Fetch token data when component mounts
-       axios
-         .get("https://api.ultimatedigits.com/winks/proxy")
-         .then((response) => {
-           const tokens = response.data.data.tokens;
-           setTokensData(tokens);
-           console.log(tokens)
-         })
-         .catch((error) => {
-           console.error("Error fetching data:", error.message);
-         });
-     }, []);
+  useEffect(() => {
+    axios
+      .get("https://api.ultimatedigits.com/winks/proxy")
+      .then((response) => {
+        const tokens = response.data.data.tokens;
+        setTokensData(tokens);
+        console.log(tokens)
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error.message);
+      });
+  }, []);
 
-   useEffect(() => {
-     // Recalculate USD values whenever inputValue or outputValue changes
-     const calculateUsdValues = () => {
-       // Calculate USD value for input
-       if (selectedOptionFrom && tokensData && inputValue > 0) {
-         const fromTokenData = tokensData[selectedOptionFrom.address];
-         if (fromTokenData) {
-           const tokenPriceInUSD = parseFloat(fromTokenData.price); // Price of from token in USD
-           const tokenAmount = parseFloat(inputValue); // User input in token amount
+  useEffect(() => {
+    const calculateUsdValues = () => {
+      if (selectedOptionFrom && tokensData && inputValue > 0) {
+        const fromTokenData = tokensData[selectedOptionFrom.address];
+        if (fromTokenData) {
+          const tokenPriceInUSD = parseFloat(fromTokenData.price); 
+          const tokenAmount = parseFloat(inputValue); 
 
-           if (!isNaN(tokenPriceInUSD) && !isNaN(tokenAmount)) {
-             const calculatedUsdValue = tokenPriceInUSD * tokenAmount;
-             setUsdInputValue(
-               calculatedUsdValue < 0.01
-                 ? "<0.01"
-                 : calculatedUsdValue.toFixed(2)
-             );
-           } else {
-             setUsdInputValue("0"); // Fallback in case of invalid values
-           }
-         }
-       }
+          if (!isNaN(tokenPriceInUSD) && !isNaN(tokenAmount)) {
+            const calculatedUsdValue = tokenPriceInUSD * tokenAmount;
+            setUsdInputValue(
+              calculatedUsdValue < 0.01
+                ? "<0.01"
+                : calculatedUsdValue.toFixed(2)
+            );
+          } else {
+            setUsdInputValue("0"); 
+          }
+        }
+      }
 
-       // Calculate USD value for output
-       if (selectedOptionTo && tokensData && ouputvalue > 0) {
-         const toTokenData = tokensData[selectedOptionTo.address];
-         if (toTokenData) {
-           const tokenPriceInUSD = parseFloat(toTokenData.price); // Price of to token in USD
-           const tokenAmount = parseFloat(ouputvalue); // User output in token amount
+      if (selectedOptionTo && tokensData && ouputvalue > 0) {
+        const toTokenData = tokensData[selectedOptionTo.address];
+        if (toTokenData) {
+          const tokenPriceInUSD = parseFloat(toTokenData.price); 
+          const tokenAmount = parseFloat(ouputvalue); 
 
-           if (!isNaN(tokenPriceInUSD) && !isNaN(tokenAmount)) {
-             const calculatedUsdValue = tokenPriceInUSD * tokenAmount;
-             setUsdOutputValue(
-               calculatedUsdValue < 0.01
-                 ? "<0.01"
-                 : calculatedUsdValue.toFixed(2)
-             );
-           } else {
-             setUsdOutputValue("0"); // Fallback in case of invalid values
-           }
-         }
-       }
-     };
+          if (!isNaN(tokenPriceInUSD) && !isNaN(tokenAmount)) {
+            const calculatedUsdValue = tokenPriceInUSD * tokenAmount;
+            setUsdOutputValue(
+              calculatedUsdValue < 0.01
+                ? "<0.01"
+                : calculatedUsdValue.toFixed(2)
+            );
+          } else {
+            setUsdOutputValue("0"); 
+          }
+        }
+      }
+    };
 
-     calculateUsdValues();
-   }, [
-     inputValue,
-     ouputvalue,
-     selectedOptionFrom,
-     selectedOptionTo,
-     tokensData,
-   ]);
-
-
+    calculateUsdValues();
+  }, [
+    inputValue,
+    ouputvalue,
+    selectedOptionFrom,
+    selectedOptionTo,
+    tokensData,
+  ]);
 
   const fetchTokenBalance = async (tokenAddress) => {
     if (!walletAddress) return "0.00";
@@ -145,11 +138,9 @@ const Swap = () => {
     }
 
     try {
-      // Fetch balances
       const fromBalance = await fetchTokenBalance(selectedOptionFrom.address);
       const toBalance = await fetchTokenBalance(selectedOptionTo.address);
       setRawFromInput(fromBalance);
-      // Get decimals for each token
       const fromDecimals = await getFormattedBalance(
         selectedOptionFrom.address,
         fromBalance
@@ -168,82 +159,75 @@ const Swap = () => {
     }
   };
 
- useEffect(() => {
-   if (isConnected && walletAddress) {
-     getBalances();
-   }
+  useEffect(() => {
+    if (isConnected && walletAddress) {
+      getBalances();
+    }
 
-   const fetchOutAmount = async () => {
-     try {
-           setProcessingOutput(true); 
+    const fetchOutAmount = async () => {
+      try {
+        setProcessingOutput(true); 
 
-       const amountIn = inputValue; // Replace with your input value
-       const tokenIn = selectedOptionFrom.address; // Replace with actual token address
-       const tokenOut = selectedOptionTo.address; // Replace with actual token address
+        const amountIn = inputValue; 
+        const tokenIn = selectedOptionFrom.address; 
+        const tokenOut = selectedOptionTo.address; 
 
-       console.log("Fetching Amount Out...");
-       console.log("Input Amount:", amountIn);
-       console.log("Token In Address:", tokenIn);
-       console.log("Token Out Address:", tokenOut);
+        console.log("Fetching Amount Out...");
+        console.log("Input Amount:", amountIn);
+        console.log("Token In Address:", tokenIn);
+        console.log("Token Out Address:", tokenOut);
 
-       // Provider
-       const provider = window.ethereum
-         ? new ethers.providers.Web3Provider(window.ethereum)
-         : ethers.providers.getDefaultProvider();
-       console.log("Provider:", provider);
+        const provider = window.ethereum
+          ? new ethers.providers.Web3Provider(window.ethereum)
+          : ethers.providers.getDefaultProvider();
+        console.log("Provider:", provider);
 
-       // Signer
-       const signer = provider.getSigner();
-       console.log("Signer:", signer);
+        const signer = provider.getSigner();
+        console.log("Signer:", signer);
 
-       // Check tokenInDecimals
-       const tokenInCon = new ethers.Contract(tokenIn, tokenAbi, signer);
-       const tokenInDecimals = await tokenInCon.decimals();
-       const inputValueDecimals = (amountIn.split(".")[1] || []).length;
+        const tokenInCon = new ethers.Contract(tokenIn, tokenAbi, signer);
+        const tokenInDecimals = await tokenInCon.decimals();
+        const inputValueDecimals = (amountIn.split(".")[1] || []).length;
 
-       if (inputValueDecimals > tokenInDecimals) {
-         console.error(
-           "No route found: Input value exceeds token decimal places."
-         );
-         setProcessingOutput(false);
-         setRouteerror(true); // Update state or handle the error accordingly
-         return;
-       }
+        if (inputValueDecimals > tokenInDecimals) {
+          console.error(
+            "No route found: Input value exceeds token decimal places."
+          );
+          setProcessingOutput(false);
+          setRouteerror(true); 
+          return;
+        }
 
-       const amountOut = await GetOutAmount(amountIn, tokenIn, tokenOut);
-       setRouteerror(false);
-       if (amountOut !== null) {
-         console.log("Fetched Amount Out:", amountOut);
-         setOutputValue(amountOut);
-         setProcessingOutput(false);
-       } else {
-         console.error("Amount out is null or undefined.");
-         setProcessingOutput(false);
-       }
-     } catch (error) {
-       console.error("Error in fetchOutAmount:", error);
-       setProcessingOutput(false);
-     }
-   };
+        const amountOut = await GetOutAmount(amountIn, tokenIn, tokenOut);
+        setRouteerror(false);
+        if (amountOut !== null) {
+          console.log("Fetched Amount Out:", amountOut);
+          setOutputValue(amountOut);
+          setProcessingOutput(false);
+        } else {
+          console.error("Amount out is null or undefined.");
+          setProcessingOutput(false);
+        }
+      } catch (error) {
+        console.error("Error in fetchOutAmount:", error);
+        setProcessingOutput(false);
+      }
+    };
 
-   // Interval logic
-   const interval = setInterval(() => {
-     if (isConnected && walletAddress) {
-       fetchOutAmount();
-     }
-   }, 5000); // Fetch every 5 seconds
+    const interval = setInterval(() => {
+      if (isConnected && walletAddress) {
+        fetchOutAmount();
+      }
+    }, 5000); 
 
-   // Cleanup interval on unmount or dependency change
-   return () => clearInterval(interval);
- }, [
-   isConnected,
-   walletAddress,
-   selectedOptionFrom,
-   selectedOptionTo,
-   inputValue,
- ]);
-
-
+    return () => clearInterval(interval);
+  }, [
+    isConnected,
+    walletAddress,
+    selectedOptionFrom,
+    selectedOptionTo,
+    inputValue,
+  ]);
 
   const checkNetwork = async () => {
     const provider =
@@ -269,6 +253,7 @@ const Swap = () => {
     setIsDropdownOpenTo(!isDropdownOpenTo);
     setIsDropdownOpenFrom(false);
   };
+
   const handleOptionSelectFrom = (optionName) => {
     const selected = Options.find((opt) => opt.head === optionName);
     if (!selected) return;
@@ -288,6 +273,11 @@ const Swap = () => {
       });
     }
     setIsDropdownOpenFrom(false);
+    logAnalyticsEvent(Events.TOKEN_SELECTED, {
+      token_name: selected.head,
+      token_address: selected.address,
+      selection_type: 'from_token'
+    });
   };
 
   const handleOptionSelectTo = (optionName) => {
@@ -309,6 +299,11 @@ const Swap = () => {
       });
     }
     setIsDropdownOpenTo(false);
+    logAnalyticsEvent(Events.TOKEN_SELECTED, {
+      token_name: selected.head,
+      token_address: selected.address,
+      selection_type: 'to_token'
+    });
   };
 
   const closeDropdown = () => {
@@ -318,6 +313,12 @@ const Swap = () => {
 
   const handleApproval = async () => {
     try {
+      logAnalyticsEvent(Events.TOKEN_APPROVAL_INITIATED, {
+        token_name: selectedOptionFrom.name,
+        token_address: selectedOptionFrom.address,
+        amount: inputValue
+      });
+
       const res = await GetApproval(
         walletAddress,
         selectedOptionFrom.address,
@@ -328,10 +329,24 @@ const Swap = () => {
       if (res === "0") {
         setneedApproval(true);
       }
+      logAnalyticsEvent(Events.TOKEN_APPROVAL_COMPLETED, {
+        token_name: selectedOptionFrom.name,
+        token_address: selectedOptionFrom.address,
+        amount: inputValue,
+        transaction_hash: 'unknown'
+      });
     } catch (error) {
       console.log("eerror in alloaef", error);
+      logAnalyticsEvent(Events.TOKEN_APPROVAL_FAILED, {
+        token_name: selectedOptionFrom.name,
+        token_address: selectedOptionFrom.address,
+        amount: inputValue,
+        error_code: error.code,
+        error_message: error.message
+      });
     }
   };
+
   const handleGetOut = async (validValue) => {
     try {
       const res = await GetOutAmount(
@@ -352,6 +367,11 @@ const Swap = () => {
     if (validValue.split(".").length > 2) return;
 
     setInputValue(validValue);
+    logAnalyticsEvent(Events.AMOUNT_ENTERED, {
+      token_name: selectedOptionFrom.name,
+      token_address: selectedOptionFrom.address,
+      amount: validValue
+    });
 
     if (
       selectedOptionFrom.address !==
@@ -377,29 +397,43 @@ const Swap = () => {
     setSelectedOptionTo(temp);
   };
 
-  
-
-  // Handle showing the TransactionSwap component
   const handleShowTransactionSwap = () => {
     setShowTransactionSwap(true);
   };
 
-  // Close the TransactionSwap component
   const handleCloseTransactionSwap = () => {
     setShowTransactionSwap(false);
   };
 
   const handleApproveToken = async () => {
-    setIsProcessing(true); // Set processing state to true
+    setIsProcessing(true); 
     try {
+      logAnalyticsEvent(Events.TOKEN_APPROVAL_INITIATED, {
+        token_name: selectedOptionFrom.name,
+        token_address: selectedOptionFrom.address,
+        amount: inputValue
+      });
+
       const tx = await ApproveToken(selectedOptionFrom.address);
-      await tx.wait(); // Wait for the transaction to be mined
+      await tx.wait(); 
       console.log("Transaction completed:", tx);
-      setneedApproval(false); // Approval was successful
+      setneedApproval(false); 
+      logAnalyticsEvent(Events.TOKEN_APPROVAL_COMPLETED, {
+        token_name: selectedOptionFrom.name,
+        token_address: selectedOptionFrom.address,
+        amount: inputValue,
+        transaction_hash: tx.hash || 'unknown'
+      });
     } catch (error) {
       console.error("Error during token approval:", error);
+      logAnalyticsEvent(Events.TOKEN_APPROVAL_FAILED, {
+        token_name: selectedOptionFrom.name,
+        token_address: selectedOptionFrom.address,
+        amount: inputValue,
+        error_code: error.code,
+        error_message: error.message
+      });
 
-      // If the error indicates the transaction was canceled by the user
       if (
         error.code === 4001 ||
         error.message.includes("User denied transaction")
@@ -407,44 +441,46 @@ const Swap = () => {
         setneedApproval(true);
       }
     } finally {
-      setIsProcessing(false); // Set processing state back to false
+      setIsProcessing(false); 
     }
   };
-
- 
 
   const fetchTokenPrice = (tokenAddress) => {
     const token = Tokens.find(
       (t) => t.address.toLowerCase() === tokenAddress.toLowerCase()
     );
-    console.log("Token Price:", token?.price); // Check the retrieved price
+    console.log("Token Price:", token?.price); 
     return token ? token.price : 0;
   };
 
+  const isInsufficientBalance =
+    parseFloat(inputValue) > parseFloat(maxBalance);
 
+  const handleMaxClick = async () => {
+    if (maxBalance) {
+      setInputValue(maxBalance);
+      logAnalyticsEvent(Events.MAX_AMOUNT_SELECTED, {
+        token_name: selectedOptionFrom.name,
+        token_address: selectedOptionFrom.address,
+        max_amount: maxBalance
+      });
+    }
+  };
 
-    const isInsufficientBalance =
-      parseFloat(inputValue) > parseFloat(maxBalance);
-    // console.log(isInsufficientBalance, inputValue, MaxBalance);
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (selectedOptionFrom) {
+        try {
+          const balance = await getMaxBalance(selectedOptionFrom.address);
+          setMaxBalance(balance); 
+        } catch (error) {
+          setError("Error fetching max balance."); 
+        }
+      }
+    };
 
-     const handleMaxClick = () => {
-    setInputValue(maxBalance);
-     };
-
-     useEffect(() => {
-       const fetchBalance = async () => {
-         if (selectedOptionFrom) {
-           try {
-             const balance = await getMaxBalance(selectedOptionFrom.address);
-             setMaxBalance(balance); // Update state with the max balance
-           } catch (error) {
-             setError("Error fetching max balance."); // Handle any errors
-           }
-         }
-       };
-
-       fetchBalance();
-     }, [selectedOptionFrom]); 
+    fetchBalance();
+  }, [selectedOptionFrom]); 
 
   return (
     <div className="flex flex-col justify-center items-center h-screen bg-black relative">
@@ -506,7 +542,7 @@ const Swap = () => {
                 onKeyPress={handleKeyPress}
               />
               <div className="flex justify-between">
-                <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
+                <div className="sm:text-xs text-[10px] font-medium text-balanceText text-start">
                   Balance:{isConnected ? fromTokenBalance : "0.0"}
                 </div>
                 <div className="sm:text-xs text-[10px] text-white text-start font-normal  px-1  sm:px-2">
@@ -532,7 +568,7 @@ const Swap = () => {
         </div>
 
         <button
-          onClick={handleSwap} // Show TransactionSwap on button click
+          onClick={handleSwap} 
           className={`hover:bg-notConnectedBg rounded-full p-1 sm:p-2 w-fit absolute left-[7.2rem] sm:left-[9.9rem] -mt-1 sm:-mt-2.5 ${
             isDropdownOpenFrom || isDropdownOpenTo ? "-z-50" : ""
           }`}
@@ -601,7 +637,7 @@ const Swap = () => {
               />
               <div className="flex justify-between">
                 {" "}
-                <div className="sm:text-xs text-[10px] text-balanceText text-start font-medium  px-1 sm:px-2">
+                <div className="sm:text-xs text-[10px] font-medium text-balanceText text-start">
                   Balance: {isConnected ? toTokenBalance : "0.0"}
                 </div>
                 <div className="sm:text-xs text-[10px] text-white text-start font-normal  px-1 mr-10 sm:px-2">
@@ -697,11 +733,11 @@ const Swap = () => {
         </div>
       </div>
 
-      {showTransactionSwap && ( // Render TransactionSwap if visible
+      {showTransactionSwap && ( 
         <SwapContainer
           initialFromToken={selectedOptionFrom}
           initialToToken={selectedOptionTo}
-          onClose={handleCloseTransactionSwap} // Pass close function
+          onClose={handleCloseTransactionSwap} 
           inpVal={inputValue}
           outVal={ouputvalue}
           setIV={setInputValue}

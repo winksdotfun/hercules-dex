@@ -3,6 +3,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { motion } from "framer-motion";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
+import { logAnalyticsEvent, Events } from '../firebase/analytics';
 
 const CustomButton = ({ setConnectionType, setIsConnected }) => {
   const account = useAccount();
@@ -13,6 +14,12 @@ const CustomButton = ({ setConnectionType, setIsConnected }) => {
     }
     if (account.isConnected && typeof setConnectionType === "function") {
       setConnectionType("wagmi");
+      
+      // Log wallet connection
+      logAnalyticsEvent(Events.WALLET_CONNECTED, {
+        wallet_type: 'wagmi',
+        user_address: account.address
+      });
     }
   }, [account.isConnected]);
 
@@ -42,6 +49,13 @@ const handleConnectMetaMask = async () => {
           await window.ethereum.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: METIS_CHAIN_ID }],
+          });
+          
+          // Log network switch
+          logAnalyticsEvent(Events.NETWORK_SWITCHED, {
+            from_chain_id: currentChainId,
+            to_chain_id: METIS_CHAIN_ID,
+            chain_name: 'Metis Andromeda'
           });
         } catch (switchError) {
           if (switchError.code === 4902) {
