@@ -31,7 +31,7 @@ const Swap = () => {
   const [needApproval, setneedApproval] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentNetwork, setCurrentNetwork] = useState("");
-  
+  const [processingoutput, setProcessingOutput] = useState(false)
   const [selectedOptionFrom, setSelectedOptionFrom] = useState({
     name: "m.USDC",
     image: musdc,
@@ -43,7 +43,7 @@ const Swap = () => {
     address: "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
   });
   const [inputValue, setInputValue] = useState("");
-  const [ouputvalue, setOutputValue] = useState("0.0");
+  const [ouputvalue, setOutputValue] = useState("");
   const [fromTokenBalance, setFromTokenBalance] = useState("0.00");
   const [toTokenBalance, setToTokenBalance] = useState("0.00");
   const { address: walletAddress, isConnected } = useAccount();
@@ -168,62 +168,82 @@ const Swap = () => {
     }
   };
 
-  useEffect(() => {
-    if (isConnected && walletAddress) {
-      getBalances();
-    }
+ useEffect(() => {
+   if (isConnected && walletAddress) {
+     getBalances();
+   }
 
-    const fetchOutAmount = async () => {
-      const amountIn = inputValue; // Replace with your input value
-      const tokenIn = selectedOptionFrom.address; // Replace with actual token address
-      const tokenOut = selectedOptionTo.address; // Replace with actual token address
+   const fetchOutAmount = async () => {
+     try {
+           setProcessingOutput(true); 
 
-      console.log("Fetching Amount Out...");
-      console.log("Input Amount:", amountIn);
-      console.log("Token In Address:", tokenIn);
-      console.log("Token Out Address:", tokenOut);
+       const amountIn = inputValue; // Replace with your input value
+       const tokenIn = selectedOptionFrom.address; // Replace with actual token address
+       const tokenOut = selectedOptionTo.address; // Replace with actual token address
 
-      // Provider
-      const provider = window.ethereum
-        ? new ethers.providers.Web3Provider(window.ethereum)
-        : ethers.providers.getDefaultProvider();
-      console.log("Provider:", provider);
+       console.log("Fetching Amount Out...");
+       console.log("Input Amount:", amountIn);
+       console.log("Token In Address:", tokenIn);
+       console.log("Token Out Address:", tokenOut);
 
-      // Signer
-      const signer = provider.getSigner();
-      console.log("Signer:", signer);
+       // Provider
+       const provider = window.ethereum
+         ? new ethers.providers.Web3Provider(window.ethereum)
+         : ethers.providers.getDefaultProvider();
+       console.log("Provider:", provider);
 
-      // Check tokenInDecimals
-      const tokenInCon = new ethers.Contract(tokenIn, tokenAbi, signer);
-      const tokenInDecimals = await tokenInCon.decimals();
-      const inputValueDecimals = (amountIn.split(".")[1] || []).length;
+       // Signer
+       const signer = provider.getSigner();
+       console.log("Signer:", signer);
 
-      if (inputValueDecimals > tokenInDecimals) {
-        console.error(
-          "No route found: Input value exceeds token decimal places."
-        );
-        setRouteerror(true); // Update state or handle the error accordingly
-        return; 
-      }
+       // Check tokenInDecimals
+       const tokenInCon = new ethers.Contract(tokenIn, tokenAbi, signer);
+       const tokenInDecimals = await tokenInCon.decimals();
+       const inputValueDecimals = (amountIn.split(".")[1] || []).length;
 
-      const amountOut = await GetOutAmount(amountIn, tokenIn, tokenOut);
-      setRouteerror(false);
-      if (amountOut !== null) {
-        console.log("Fetched Amount Out:", amountOut);
-        setOutputValue(amountOut);
-      } else {
-        console.error("Amount out is null or undefined.");
-      }
-    };
+       if (inputValueDecimals > tokenInDecimals) {
+         console.error(
+           "No route found: Input value exceeds token decimal places."
+         );
+         setProcessingOutput(false);
+         setRouteerror(true); // Update state or handle the error accordingly
+         return;
+       }
 
-    fetchOutAmount();
-  }, [
-    isConnected,
-    walletAddress,
-    selectedOptionFrom,
-    selectedOptionTo,
-    inputValue,
-  ]);
+       const amountOut = await GetOutAmount(amountIn, tokenIn, tokenOut);
+       setRouteerror(false);
+       if (amountOut !== null) {
+         console.log("Fetched Amount Out:", amountOut);
+         setOutputValue(amountOut);
+         setProcessingOutput(false);
+       } else {
+         console.error("Amount out is null or undefined.");
+         setProcessingOutput(false);
+       }
+     } catch (error) {
+       console.error("Error in fetchOutAmount:", error);
+       setProcessingOutput(false);
+     }
+   };
+
+   // Interval logic
+   const interval = setInterval(() => {
+     if (isConnected && walletAddress) {
+       fetchOutAmount();
+     }
+   }, 5000); // Fetch every 5 seconds
+
+   // Cleanup interval on unmount or dependency change
+   return () => clearInterval(interval);
+ }, [
+   isConnected,
+   walletAddress,
+   selectedOptionFrom,
+   selectedOptionTo,
+   inputValue,
+ ]);
+
+
 
   const checkNetwork = async () => {
     const provider =
@@ -339,7 +359,10 @@ const Swap = () => {
     ) {
       handleApproval();
     }
+    if(validValue > 0){
     handleGetOut(validValue);
+    setProcessingOutput(true);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -610,7 +633,12 @@ const Swap = () => {
             {"Error: No route found"}
           </div>
         )}
-
+        {processingoutput && (
+          <div class="flex items-center justify-center  py-2 text-[#696a6b]">
+            <div role="status" class="spinner-border"></div>{" "}
+            <span class="ms-2">Processing...</span>
+          </div>
+        )}
         <div className="flex flex-col gap-4 mt-5">
           {!isConnected && (
             <button className="text-[#696a6b] font-two bg-notConnectedBg w-full py-1 sm:p-3 rounded-xl font-semibold text-sm sm:text-lg mt-1">
@@ -627,7 +655,7 @@ const Swap = () => {
                   onMouseLeave={() => setIsMaxHovered(false)}
                   onClick={handleApproveToken}
                   disabled={isProcessing}
-                  className={`text-black font-two cursor-pointer rounded-full p-1 sm:p-2 text-sm sm:text-lg font-semibold text-center items-center ${
+                  className={`text-black font-two cursor-pointer rounded-xl p-1 sm:p-2 text-sm sm:text-lg font-semibold text-center items-center ${
                     isProcessing ? "bg-notConnectedBg" : "bg-custom-gradient"
                   } ${isProcessing ? "text-white" : "text-black"} ${
                     isMaxHovered ? "text-white" : "text-black"
@@ -644,25 +672,25 @@ const Swap = () => {
                     `Approve ${selectedOptionFrom.name}`
                   )}
                 </button>
-              ) : !routeerror ? (
+              ) : !routeerror && ouputvalue && !processingoutput ? (
                 <button
                   onMouseDown={() => setIsMaxHovered(true)}
                   onMouseUp={() => setIsMaxHovered(false)}
                   onMouseLeave={() => setIsMaxHovered(false)}
                   className={`text-black bg-custom-gradient ${
                     isMaxHovered ? "text-white" : "text-black"
-                  } font-two cursor-pointer bg-notConnectedBg rounded-full p-1 sm:p-2 text-sm sm:text-lg font-semibold text-center items-center`}
+                  } font-two cursor-pointer bg-notConnectedBg rounded-xl p-1 sm:p-2 text-sm sm:text-lg font-semibold text-center items-center`}
                   onClick={() => setShowTransactionSwap(true)}
                 >
                   Swap
                 </button>
               ) : (
-                <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-1 sm:p-2 text-sm sm:text-lg font-semibold mt-1">
+                <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-1 sm:p-2 text-sm sm:text-lg font-semibold mt-1 rounded-xl">
                   Swap
                 </button>
               )
             ) : (
-              <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-1 sm:p-2 text-sm sm:text-lg font-semibold mt-1">
+              <button className="text-[#696a6b] font-two bg-notConnectedBg w-full p-1 sm:p-2 text-sm sm:text-lg font-semibold mt-1 rounded-xl">
                 Swap
               </button>
             ))}
@@ -676,6 +704,8 @@ const Swap = () => {
           onClose={handleCloseTransactionSwap} // Pass close function
           inpVal={inputValue}
           outVal={ouputvalue}
+          setIV={setInputValue}
+          setOV={setOutputValue}
         />
       )}
       <p className="text-white text-sm sm:text-base font-medium text-center leading-5  sm:pt-2 font-two">

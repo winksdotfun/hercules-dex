@@ -3,21 +3,22 @@ import TransactionSwap from "./TransactionSwap";
 import TranscationCompleted from "./TranscationCompleted";
 import { Swap } from "../integration";
 
-const SwapContainer = ({ initialFromToken, initialToToken, onClose, inpVal, outVal }) => {
+const SwapContainer = ({ initialFromToken, initialToToken, onClose, inpVal, outVal,setIV,
+        setOV  }) => {
     const [showSwapModal, setShowSwapModal] = useState(true); // Track whether to show the modal
     const [fromToken, setFromToken] = useState(initialFromToken);
     const [toToken, setToToken] = useState(initialToToken);
     const [inputVal, setInputValue] = useState(inpVal);
     const [outputVal, setOutputValue] = useState(outVal);
-
+    const [processModel, setProcessModel] = useState(false);
+    const [success , setSuccess] = useState(false);
 
     const handleSwapClick = async () => {
-
+      
       console.log("vugygfytfuy");
       const res = await Swap();
-      console.log("res",res);
       
-      setShowSwapModal(false); // Switch to TransactionCompleted
+      console.log("res", res);
     };
 
     const handleCloseCompleted = () => {
@@ -31,7 +32,7 @@ const SwapContainer = ({ initialFromToken, initialToToken, onClose, inpVal, outV
 
     return (
       <div>
-        {showSwapModal ? (
+        {showSwapModal && (
           <TransactionSwap
             fromToken={fromToken}
             toToken={toToken}
@@ -40,8 +41,16 @@ const SwapContainer = ({ initialFromToken, initialToToken, onClose, inpVal, outV
             onCancel={handleCancel} // Pass down handleCancel
             inputVal={inputVal}
             outputVal={outputVal}
+            setSuccess={setSuccess}
+            setProcessModel={setProcessModel}
+            setShowSwapModal={setShowSwapModal}
+            setIV={setIV}
+            setOV={setOV}
+            
           />
-        ) : (
+        )}
+
+        {processModel && (
           <TranscationCompleted
             fromToken={fromToken}
             toToken={toToken}
@@ -49,6 +58,7 @@ const SwapContainer = ({ initialFromToken, initialToToken, onClose, inpVal, outV
             onCancel={handleCancel}
             inputVal={inputVal}
             outputVal={outputVal}
+            success={success}
           />
         )}
       </div>

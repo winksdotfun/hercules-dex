@@ -559,6 +559,7 @@ let tempTokOut;
     } else {
       console.error("Unhandled error:", error);
     }
+     throw error;
   }
 };
 

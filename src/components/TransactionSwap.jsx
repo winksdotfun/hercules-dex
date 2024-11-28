@@ -13,12 +13,18 @@ const TransactionSwap = ({
   onClose,
   onCancel,
   inputVal,
+  setShowSwapModal,
+  setSuccess,
   outputVal,
+  setProcessModel,
+  setOV,
+  setIV,
 }) => {
   const [isMaxHovered, setIsMaxHovered] = useState(false);
   const [fromPrice, setFromPrice] = useState(null);
   const [toPrice, setToPrice] = useState(null);
-
+  const [cancelled, setCancelled] = useState(false);
+  const [transNotSuccess, setTransNotSuccess]  = useState(false);
   useEffect(() => {
     axios
       .get("https://api.ultimatedigits.com/winks/proxy")
@@ -65,12 +71,49 @@ const TransactionSwap = ({
         throw new Error("One or more swap parameters are undefined.");
       }
 
-      await Swap(amountin, tokenin, tokenout, recipientAddress);
-      console.log("Swap initiated successfully");
+      setProcessModel(true);
 
-      if (onSwapClick) onSwapClick();
+      // Explicitly handle Swap response and errors
+      const res = await Swap(
+        amountin,
+        tokenin,
+        tokenout,
+        recipientAddress
+      ).catch((error) => {
+        console.error("Error caught in Swap call:", error);
+        throw error; // Ensure it propagates to the outer catch
+      });
+
+      if (!res) {
+        throw new Error("Swap function did not return a valid response.");
+      }
+
+      console.log("Swap initiated successfully:", res);
+
+      if (res) {
+        setSuccess(true); // Mark as
+        setIV('');
+        setOV('');
+      }
+
+      if (onSwapClick) onSwapClick(); // Additional callback logic
     } catch (error) {
-      console.error("Error executing swap:", error);
+      console.error("Error executing swap in handleSwapClick:", error);
+
+      if (
+        error.code === 4001 || // MetaMask rejection
+        error.message.includes("user rejected transaction")
+      ) {
+        console.log("User canceled the swap.");
+        setCancelled(true); // Handle cancellation
+      }
+      else{
+        setTransNotSuccess(true);
+      }
+      
+      // Update UI states
+      setShowSwapModal(true);
+      setProcessModel(false);
     }
   };
 
@@ -79,7 +122,10 @@ const TransactionSwap = ({
     if (numBalance < 0.00001 && numBalance > 0) {
       return "<0.00001";
     }
-    return numBalance.toFixed(5);
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 5,
+      maximumFractionDigits: 5,
+    }).format(numBalance);
   };
 
   return (
@@ -128,6 +174,26 @@ const TransactionSwap = ({
             </div>
           </div>
         </div>
+        {cancelled && (
+          <div
+            role="alert"
+            aria-live="polite"
+            aria-atomic="true"
+            className="alert mt-3 mb-0 bg-[#ff353519] bg-opacity-50 text-[#ff3535] border-none font-normal px-6 text-[13px] text-left p-2 rounded-full"
+          >
+            {"Error: You cancelled the swap"}
+          </div>
+        )}
+        {transNotSuccess && (
+          <div
+            role="alert"
+            aria-live="polite"
+            aria-atomic="true"
+            className="alert mt-3 mb-0 bg-[#ff353519] bg-opacity-50 text-[#ff3535] border-none font-normal px-6 text-[13px] text-left p-2 rounded-full"
+          >
+            {"Error: Transaction is not successfull"}
+          </div>
+        )}
 
         <div className="text-white my-2 sm:my-6 flex flex-col gap-1">
           <div className="flex justify-between">

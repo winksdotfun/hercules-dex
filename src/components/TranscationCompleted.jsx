@@ -14,15 +14,22 @@ const TranscationCompleted = ({
   onCancel,
   inputVal,
   outputVal,
+  success,
 }) => {
+  console.log(inputVal, outputVal);
 
-  const formatBalance = (balance) => {
-    const numBalance = parseFloat(balance);
-    if (numBalance < 0.00000001 && numBalance > 0) {
-      return "<0.00000001";
-    }
-    return numBalance.toFixed(5);
-  };
+
+
+const formatBalance = (balance) => {
+  const numBalance = parseFloat(balance);
+  if (numBalance < 0.00000001 && numBalance > 0) {
+    return "<0.000000001";
+  }
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 8,
+    maximumFractionDigits: 8,
+  }).format(numBalance);
+};
   return (
     <div>
       <div className="fixed inset-0 flex items-center justify-center bg-black py-2">
@@ -89,29 +96,36 @@ const TranscationCompleted = ({
               </p>
             </div>
           </div>
-          <div className="w-full mt-8 flex gap-2  justify-center">
-            <div className="spinner mt-0.5"></div>
+          {!success && (
+            <div className="w-full mt-8 flex gap-2  justify-center">
+              <div className="spinner mt-0.5"></div>
 
-            <div className="flex flex-col gap-1  ">
-              <p className="sm:text-[17px] text-[11px] font-medium text-two  text-start text-white">
-                Transaction Pending
-              </p>
-              <p className="sm:text-[14px] text-[11px] font-medium text-two  text-left text-balanceText">
-                Transaction is waiting
-              </p>
+              <div className="flex flex-col gap-1  ">
+                <p className="sm:text-[17px] text-[11px] font-medium text-two  text-start text-white">
+                  Transaction Pending
+                </p>
+                <p className="sm:text-[14px] text-[11px] font-medium text-two  text-left text-balanceText">
+                  Transaction is waiting
+                </p>
+              </div>
             </div>
-          </div>
-          {/* <div className="w-full mt-8 flex gap-2  justify-center">
-            <div className="success-icon mt-0.5"></div>
-            <div className="flex flex-col gap-1 ">
-              <p className="sm:text-[17px] text-[11px] font-medium text-two  text-start text-white">
-                Transaction Completed!
-              </p>
-              <p className="sm:text-[14px] text-[11px] font-medium text-two text-left   text-balanceText">
-                Successfully swapped 0.01 METIS <br /> for 0.0495 m.USDC
-              </p>
+          )}
+
+          {success && (
+            <div className="w-full mt-8 flex gap-2  justify-center">
+              <div className="success-icon mt-0.5"></div>
+              <div className="flex flex-col gap-1 ">
+                <p className="sm:text-[17px] text-[11px] font-medium text-two  text-start text-white">
+                  Transaction Completed!
+                </p>
+                <p className="sm:text-[14px] text-[11px] font-medium text-two text-left   text-balanceText">
+                  Successfully swapped {formatBalance(inputVal)} {" "}
+                  {fromToken.name} <br /> for {formatBalance(outputVal)}{" "}
+                  {toToken.name}
+                </p>
+              </div>
             </div>
-          </div> */}
+          )}
         </div>
       </div>
     </div>
